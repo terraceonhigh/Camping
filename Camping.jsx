@@ -160,58 +160,58 @@ const TREE = [
   { id: 'preflight', label: 'Pre-Flight Checks', emoji: '✓', minHours: 0,
     desc: 'Must resolve before departure', children: [
     { label: 'Fire & Environment', children: [
-      { label: 'BC fire ban status — bcwildfire.ca', note: 'Check day-of, not just day-before', type: 'bc', liveKey: 'fireBans' },
-      { label: 'Burn restrictions / air quality advisories' },
+      { label: 'BC fire ban status — bcwildfire.ca', note: 'Check day-of, not just day-before', type: 'bc', liveKey: 'fireBans', kind: 'check' },
+      { label: 'Burn restrictions / air quality advisories', kind: 'check' },
     ]},
     { label: 'Site', children: [
-      { label: 'Campsite reservation confirmed', note: 'DiscoverCamping.ca' },
-      { label: 'Park opening status', note: 'bcparks.ca' },
-      { label: 'Highway and road conditions', note: 'DriveBC.ca' },
+      { label: 'Campsite reservation confirmed', note: 'DiscoverCamping.ca', kind: 'check' },
+      { label: 'Park opening status', note: 'bcparks.ca', kind: 'check' },
+      { label: 'Highway and road conditions', note: 'DriveBC.ca', kind: 'check' },
     ]},
     { label: 'Weather', children: [
-      { label: '48-hour forecast', note: 'rain, wind, overnight low', liveKey: 'forecast' },
-      { label: 'Rain plan confirmed', note: 'Tarp rigged on arrival if >40% precip', liveKey: 'rainRisk' },
+      { label: '48-hour forecast', note: 'rain, wind, overnight low', liveKey: 'forecast', kind: 'check' },
+      { label: 'Rain plan confirmed', note: 'Tarp rigged on arrival if >40% precip', liveKey: 'rainRisk', kind: 'check' },
     ]},
     { label: 'Gear', children: [
-      { label: 'Headlamp batteries tested' },
-      { label: 'Phone & power banks fully charged' },
-      { label: 'Ice box pre-chilled', note: '1–2 hrs before loading food' },
+      { label: 'Headlamp batteries tested', kind: 'check' },
+      { label: 'Phone & power banks fully charged', kind: 'check' },
+      { label: 'Ice box pre-chilled', note: '1–2 hrs before loading food', kind: 'check' },
     ]},
     { label: 'Guests', children: [
-      { label: 'Dietary confirmed', note: 'celiac 20ppm + pescatarian', dietary: ['celiac','pescatarian'] },
-      { label: 'Firewood purchase delegated', note: 'Buy near site — BC 10km rule', type: 'bc' },
-      { label: 'Designated driver / overnight plan confirmed', type: 'warn' },
+      { label: 'Dietary confirmed', note: 'celiac 20ppm + pescatarian', dietary: ['celiac','pescatarian'], kind: 'check' },
+      { label: 'Firewood purchase delegated', note: 'Buy near site — BC 10km rule', type: 'bc', kind: 'check' },
+      { label: 'Designated driver / overnight plan confirmed', type: 'warn', kind: 'check' },
     ]},
     { label: 'Timing', children: [
-      { label: 'Departure set for 3:00–4:00 PM arrival' },
-      { label: 'Sunrise alarm pre-set', note: '4:30 AM' },
+      { label: 'Departure set for 3:00–4:00 PM arrival', kind: 'check' },
+      { label: 'Sunrise alarm pre-set', note: '4:30 AM', kind: 'check' },
     ]},
   ]},
   { id: 'smores', label: "S'mores", emoji: '🍫', minHours: 0,
     desc: 'Root-level ritual — elevated above The Meal', children: [
-    { label: 'Marshmallows' },
-    { label: 'Chocolate', note: 'Dark or milk' },
-    { label: 'Graham crackers', note: 'Carry GF grahams separately; standard GF label (20ppm) safe for celiac guest', dietary: ['celiac'] },
+    { label: 'Marshmallows', kind: 'get' },
+    { label: 'Chocolate', note: 'Dark or milk', kind: 'get' },
+    { label: 'Graham crackers', note: 'Carry GF grahams separately; standard GF label (20ppm) safe for celiac guest', dietary: ['celiac'], kind: 'get' },
     { label: 'Roasting sticks', dep: 'The Fire' },
   ]},
   { id: 'fire', label: 'The Fire', emoji: '🔥', minHours: 0,
     desc: 'Central dep — anchors Meal, Night, Sunrise, Music', children: [
     { label: 'BC Regulatory', type: 'bc', children: [
-      { label: 'Fire ban status', note: 'Category 1 in designated rings. Bans activate <24hrs notice.', type: 'bc', dep: 'Pre-Flight → Fire & Env.' },
-      { label: 'Campfire permit', note: 'Provincial Parks: fee covers it. FLNRORD: free permit at bcwildfire.ca. Backcountry: always required.', type: 'bc' },
-      { label: 'Firewood transport rule (10 km)', note: 'BC Wildfire Act. Do not bring wood from Vancouver. Buy at or within 10km of site.', type: 'warn' },
-      { label: 'Fire ring rule', note: 'Designated metal ring only. No ground fires, no moved rocks.' },
-      { label: 'Extinguishing requirement', note: 'Cold to touch — drown, stir, check with bare hand.' },
+      { label: 'Fire ban status', note: 'Category 1 in designated rings. Bans activate <24hrs notice.', type: 'bc', dep: 'Pre-Flight → Fire & Env.', kind: 'check' },
+      { label: 'Campfire permit', note: 'Provincial Parks: fee covers it. FLNRORD: free permit at bcwildfire.ca. Backcountry: always required.', type: 'bc', kind: 'check' },
+      { label: 'Firewood transport rule (10 km)', note: 'BC Wildfire Act. Do not bring wood from Vancouver. Buy at or within 10km of site.', type: 'warn', kind: 'check' },
+      { label: 'Fire ring rule', note: 'Designated metal ring only. No ground fires, no moved rocks.', kind: 'check' },
+      { label: 'Extinguishing requirement', note: 'Cold to touch — drown, stir, check with bare hand.', kind: 'check' },
     ]},
     { label: 'Fuel', children: [
-      { label: 'Firewood', note: '2–3 bundles min (14-hr arc). Hardwood preferred. Reserve 1 bundle for 4:30 AM rebuild.' },
-      { label: 'Kindling', note: 'Often missing from bundles — #1 reason fires fail. Buy fatwood near site.', type: 'warn' },
-      { label: 'Tinder', note: 'Firestarter cubes, WetFire, or newspaper. Pack in sealed zip-lock — April humidity 70–85%.' },
+      { label: 'Firewood', note: '2–3 bundles min (14-hr arc). Hardwood preferred. Reserve 1 bundle for 4:30 AM rebuild.', kind: 'get' },
+      { label: 'Kindling', note: 'Often missing from bundles — #1 reason fires fail. Buy fatwood near site.', type: 'warn', kind: 'get' },
+      { label: 'Tinder', note: 'Firestarter cubes, WetFire, or newspaper. Pack in sealed zip-lock — April humidity 70–85%.', kind: 'get' },
     ]},
     { label: 'Ignition', children: [
-      { label: 'Butane lighter (primary)' },
-      { label: 'Waterproof matches (backup)', note: 'Separate dry bag' },
-      { label: 'Fire starter cubes or fatwood', note: 'Bridges tinder to kindling in damp' },
+      { label: 'Butane lighter (primary)', kind: 'get' },
+      { label: 'Waterproof matches (backup)', note: 'Separate dry bag', kind: 'get' },
+      { label: 'Fire starter cubes or fatwood', note: 'Bridges tinder to kindling in damp', kind: 'get' },
     ]},
     { label: 'Fire Structure Knowledge', type: 'know', children: [
       { label: 'Modified teepee for April damp', note: 'Tinder centre, kindling teepee, two logs A-frame. Elevate off ground on bark.' },
@@ -220,77 +220,77 @@ const TREE = [
       { label: 'Transition to log cabin / parallel log for sustained coals' },
     ]},
     { label: 'Wind Management', children: [
-      { label: 'April: 10–20 km/h; higher at Porteau Cove' },
-      { label: 'Body windbreak or tarp baffle during lighting' },
-      { label: 'Abandon attempt if sustained >30 km/h', type: 'warn' },
+      { label: 'April: 10–20 km/h; higher at Porteau Cove', kind: 'check' },
+      { label: 'Body windbreak or tarp baffle during lighting', kind: 'check' },
+      { label: 'Abandon attempt if sustained >30 km/h', type: 'warn', kind: 'check' },
     ]},
     { label: 'Damp Conditions Mitigation', children: [
-      { label: 'Dry bark platform under tinder' },
-      { label: 'Clear standing water from ring before building' },
-      { label: 'Spare tinder in dry bag until needed' },
+      { label: 'Dry bark platform under tinder', kind: 'get' },
+      { label: 'Clear standing water from ring before building', kind: 'check' },
+      { label: 'Spare tinder in dry bag until needed', kind: 'get' },
     ]},
     { label: 'Tending Equipment', children: [
-      { label: 'Fire poker (metal rod or 60cm+ stick)' },
-      { label: 'Work gloves (heat-resistant)' },
-      { label: 'Camp axe or hatchet (optional)' },
+      { label: 'Fire poker (metal rod or 60cm+ stick)', kind: 'get' },
+      { label: 'Work gloves (heat-resistant)', kind: 'get' },
+      { label: 'Camp axe or hatchet (optional)', kind: 'get' },
       { label: 'Headlamp', dep: 'Shared Dep' },
     ]},
     { label: 'Safety Equipment', children: [
-      { label: 'Water bucket or large pot', note: 'Min 8L. Fill on arrival.', type: 'warn' },
-      { label: 'Small folding shovel' },
-      { label: '1m clear radius around fire ring' },
-      { label: 'Identify nearest water source on arrival' },
-      { label: 'Brief group on extinguishing before first light' },
+      { label: 'Water bucket or large pot', note: 'Min 8L. Fill on arrival.', type: 'warn', kind: 'get' },
+      { label: 'Small folding shovel', kind: 'get' },
+      { label: '1m clear radius around fire ring', kind: 'check' },
+      { label: 'Identify nearest water source on arrival', kind: 'check' },
+      { label: 'Brief group on extinguishing before first light', kind: 'check' },
     ]},
   ]},
   { id: 'meal', label: 'The Meal', emoji: '🍢', minHours: 0,
     desc: 'Depends on The Fire (heat) and Cold Chain (proteins)', children: [
     { label: 'Dinner', children: [
       { label: 'Skewers / roasting sticks', children: [
-        { label: 'Sausages', dep: 'Cold Chain', dietary: ['pescatarian'] },
-        { label: 'Fish / shrimp', note: 'Shrimp, salmon chunks', dep: 'Cold Chain' },
-        { label: 'Halloumi', note: 'GF, vegetarian, grills directly on skewer' },
-        { label: 'Vegetables', note: 'Peppers, mushrooms, zucchini. GF + pescatarian-safe.' },
+        { label: 'Sausages', dep: 'Cold Chain', dietary: ['pescatarian'], kind: 'get' },
+        { label: 'Fish / shrimp', note: 'Shrimp, salmon chunks', dep: 'Cold Chain', kind: 'get' },
+        { label: 'Halloumi', note: 'GF, vegetarian, grills directly on skewer', kind: 'get' },
+        { label: 'Vegetables', note: 'Peppers, mushrooms, zucchini. GF + pescatarian-safe.', kind: 'get' },
       ]},
-      { label: 'Pre-made chili or stew', note: 'Made at home, reheated in pot over fire.', dietary: ['celiac'] },
-      { label: 'Corn tortillas', note: 'GF. Universal base — wraps anything.' },
+      { label: 'Pre-made chili or stew', note: 'Made at home, reheated in pot over fire.', dietary: ['celiac'], kind: 'get' },
+      { label: 'Corn tortillas', note: 'GF. Universal base — wraps anything.', kind: 'get' },
     ]},
     { label: 'Sweets', children: [
-      { label: 'Bananas' },
-      { label: 'Nutella' },
+      { label: 'Bananas', kind: 'get' },
+      { label: 'Nutella', kind: 'get' },
       { label: 'Chocolate', dep: "S'mores (shared)" },
       { label: 'Marshmallows', dep: "S'mores (shared)" },
       { label: 'Corn tortillas', dep: 'The Meal → Dinner' },
       { label: 'Butter', dep: 'The Meal → Cooking Gear' },
-      { label: 'Brown sugar', note: 'Optional — for grilled banana' },
+      { label: 'Brown sugar', note: 'Optional — for grilled banana', kind: 'get' },
     ]},
     { label: 'Snacks', children: [
       { label: 'Early Evening (6–9 PM)', children: [
-        { label: 'Cheese' },
-        { label: 'GF crackers', dietary: ['celiac'] },
-        { label: 'Fruit (apples, oranges)' },
-        { label: 'Hummus + cut vegetables', note: 'No cold chain required in April ambient temps' },
+        { label: 'Cheese', kind: 'get' },
+        { label: 'GF crackers', dietary: ['celiac'], kind: 'get' },
+        { label: 'Fruit (apples, oranges)', kind: 'get' },
+        { label: 'Hummus + cut vegetables', note: 'No cold chain required in April ambient temps', kind: 'get' },
       ]},
       { label: 'Late Night (10 PM–2 AM)', minHours: 6, children: [
         { label: 'Hot chocolate packets', dep: 'The Meal → Drinks' },
-        { label: 'Spiced nuts' },
-        { label: 'Jerky', note: 'Check marinade labels for gluten', dietary: ['celiac'] },
+        { label: 'Spiced nuts', kind: 'get' },
+        { label: 'Jerky', note: 'Check marinade labels for gluten', dietary: ['celiac'], kind: 'get' },
       ]},
       { label: 'Pre-Dawn (4:30 AM)', minHours: 12, children: [
-        { label: 'Granola bars', note: 'Check labels', dietary: ['celiac'] },
-        { label: 'Dates or dried fruit' },
-        { label: 'Trail mix' },
+        { label: 'Granola bars', note: 'Check labels', dietary: ['celiac'], kind: 'get' },
+        { label: 'Dates or dried fruit', kind: 'get' },
+        { label: 'Trail mix', kind: 'get' },
       ]},
     ]},
     { label: 'Drinks', children: [
-      { label: 'Coffee (percolator or instant)' },
-      { label: 'Hot chocolate packets' },
-      { label: 'Beer, wine, or spirits', dietary: ['celiac'] },
-      { label: 'Water', note: '2L per person minimum' },
+      { label: 'Coffee (percolator or instant)', kind: 'get' },
+      { label: 'Hot chocolate packets', kind: 'get' },
+      { label: 'Beer, wine, or spirits', dietary: ['celiac'], kind: 'get' },
+      { label: 'Water', note: '2L per person minimum', kind: 'get' },
     ]},
     { label: 'Morning Fuel', minHours: 12, children: [
-      { label: 'Coffee / thermos' },
-      { label: 'Pastries or granola bars', dietary: ['celiac'] },
+      { label: 'Coffee / thermos', kind: 'get' },
+      { label: 'Pastries or granola bars', dietary: ['celiac'], kind: 'get' },
     ]},
     { label: 'Cold Chain', type: 'dep', children: [
       { label: 'Ice box / passive cooler', note: 'April ambient temps help. Preferred over 12V fridge.' },
@@ -298,34 +298,34 @@ const TREE = [
       { label: 'Raw proteins in sealed containers', note: 'Bottom of cooler, coldest zone.', dietary: ['pescatarian'] },
     ]},
     { label: 'Cooking Gear', children: [
-      { label: 'Medium pot', dep: 'The Fire' },
-      { label: 'Metal skewers', note: 'Colour-code one set for fish only', dietary: ['pescatarian'] },
-      { label: 'Cutting board and knife' },
-      { label: 'Plates, bowls, utensils (or disposable)' },
-      { label: 'Trash bags + dish soap' },
+      { label: 'Medium pot', dep: 'The Fire', kind: 'get' },
+      { label: 'Metal skewers', note: 'Colour-code one set for fish only', dietary: ['pescatarian'], kind: 'get' },
+      { label: 'Cutting board and knife', kind: 'get' },
+      { label: 'Plates, bowls, utensils (or disposable)', kind: 'get' },
+      { label: 'Trash bags + dish soap', kind: 'get' },
     ]},
   ]},
   { id: 'night', label: 'The Night', emoji: '🌙', minHours: 8,
     desc: 'The 12–3 AM window. Car / tent / fire devotee.', children: [
     { label: 'Sleeping Gear', children: [
-      { label: 'Sleeping bag rated 0–5°C per person', note: 'April overnight lows 5–7°C in Metro Vancouver' },
+      { label: 'Sleeping bag rated 0–5°C per person', note: 'April overnight lows 5–7°C in Metro Vancouver', kind: 'get' },
       { label: 'Sleeping pad (R-2.0 min, R-3.0+ recommended)', note: 'R-values are additive — stack a cheap foam pad (R-1.2) under an inflatable (R-2.5) = R-3.7', type: 'know' },
-      { label: 'Real pillow', note: 'Compressible camping pillow or your home pillow in a stuff sack. Bunched-up jackets = "never again."' },
-      { label: 'Earplugs (foam)', note: 'Campground noise, tent rustling, wildlife. $2 and transformative for beginners.' },
-      { label: 'Eye mask', note: 'April sunrise ~6:15 AM — tent fabric transmits all of it' },
+      { label: 'Real pillow', note: 'Compressible camping pillow or your home pillow in a stuff sack. Bunched-up jackets = "never again."', kind: 'get' },
+      { label: 'Earplugs (foam)', note: 'Campground noise, tent rustling, wildlife. $2 and transformative for beginners.', kind: 'get' },
+      { label: 'Eye mask', note: 'April sunrise ~6:15 AM — tent fabric transmits all of it', kind: 'get' },
     ]},
     { label: 'Shelter', children: [
       { label: 'Car Camping', note: 'Warmest, driest. 1–2 car spots available (carpool).', children: [
-        { label: 'Fold rear seats flat, remove headrests', note: 'Test the setup at home. Fill seat-to-cargo gaps with rolled towels.' },
-        { label: 'Self-inflating pad (2"+ thick) on folded seats', note: 'Simpler than car-specific air mattress. R-value 2.0+.' },
-        { label: 'Window covers (Reflectix or pop-up shades)', note: 'Privacy + insulation. Trace windows with newspaper, cut to shape.' },
+        { label: 'Fold rear seats flat, remove headrests', note: 'Test the setup at home. Fill seat-to-cargo gaps with rolled towels.', kind: 'check' },
+        { label: 'Self-inflating pad (2"+ thick) on folded seats', note: 'Simpler than car-specific air mattress. R-value 2.0+.', kind: 'get' },
+        { label: 'Window covers (Reflectix or pop-up shades)', note: 'Privacy + insulation. Trace windows with newspaper, cut to shape.', kind: 'get' },
         { label: 'Crack windows 1–2" on opposite sides', note: 'Cross-ventilation for condensation. Each person exhales ~1L moisture/night.', type: 'know' },
-        { label: 'Rain guards / wind deflectors', note: '~$30/set, stick-on. Allow cracked windows in rain. #1 car-sleep accessory.' },
+        { label: 'Rain guards / wind deflectors', note: '~$30/set, stick-on. Allow cracked windows in rain. #1 car-sleep accessory.', kind: 'get' },
         { label: 'Park with head-end slightly uphill', note: 'Use phone level app — if >3° slope, add foam wedge under foot end.', type: 'know' },
-        { label: 'NEVER run engine while sleeping', note: 'CO is colourless, odourless, lethal. Exhaust pools under vehicle and seeps through cracked windows.', type: 'warn' },
+        { label: 'NEVER run engine while sleeping', note: 'CO is colourless, odourless, lethal. Exhaust pools under vehicle and seeps through cracked windows.', type: 'warn', kind: 'check' },
       ]},
       { label: 'Tent', note: '2–4 person, double-wall with rain fly.', children: [
-        { label: 'Footprint / groundsheet under tent', note: 'Must be slightly smaller than tent floor to avoid rain pooling between layers.' },
+        { label: 'Footprint / groundsheet under tent', note: 'Must be slightly smaller than tent floor to avoid rain pooling between layers.', kind: 'get' },
         { label: 'Practice setup at home before the trip', note: '10-min YouTube video for your specific model. Fumbling by headlamp at 10pm = #1 "never again" trigger.', type: 'know' },
         { label: 'Pitch on high, flat ground', note: 'Cold air pools in depressions. Under tree canopy if possible — canopy radiates heat, reduces dew.', type: 'know' },
         { label: 'Stake rain fly taut with all guylines', note: 'Saggy fly = fly touches inner wall = condensation wicks through.', type: 'know' },
@@ -335,17 +335,17 @@ const TREE = [
       ]},
     ]},
     { label: 'Layering (per person)', minHours: 4, children: [
-      { label: 'Moisture-wicking base layer' },
-      { label: 'Fleece or insulated mid layer' },
-      { label: 'Waterproof rain shell', note: 'Non-negotiable' },
-      { label: 'Warm hat and gloves' },
-      { label: '2–3 pairs of socks' },
-      { label: 'Dedicated dry sleep socks', note: 'Not the ones worn during the day. Dry feet = warm body.' },
-      { label: 'Extra dry layer in ziplock', note: 'If clothes get damp from evening dew, having something completely dry at bedtime is a morale multiplier.' },
+      { label: 'Moisture-wicking base layer', kind: 'get' },
+      { label: 'Fleece or insulated mid layer', kind: 'get' },
+      { label: 'Waterproof rain shell', note: 'Non-negotiable', kind: 'get' },
+      { label: 'Warm hat and gloves', kind: 'get' },
+      { label: '2–3 pairs of socks', kind: 'get' },
+      { label: 'Dedicated dry sleep socks', note: 'Not the ones worn during the day. Dry feet = warm body.', kind: 'get' },
+      { label: 'Extra dry layer in ziplock', note: 'If clothes get damp from evening dew, having something completely dry at bedtime is a morale multiplier.', kind: 'get' },
     ]},
     { label: 'Communal Shelter', children: [
-      { label: "Tarp (10×12' minimum)" },
-      { label: 'Rope or paracord for rigging' },
+      { label: "Tarp (10×12' minimum)", kind: 'get' },
+      { label: 'Rope or paracord for rigging', kind: 'get' },
     ]},
     { label: 'Fire Schedule', type: 'know', children: [
       { label: 'Evening burn: upside-down fire lay', note: 'Largest logs on bottom, kindling on top. Self-feeds downward ~4hrs without tending.', type: 'know', dep: 'The Fire' },
@@ -354,45 +354,45 @@ const TREE = [
       { label: 'Morning re-light from scratch', note: 'Keep dry kindling + newspaper in sealed bag overnight. Do not attempt overnight maintenance.', dep: 'The Fire → Ignition' },
     ]},
     { label: 'Wildlife Protocol', type: 'warn', children: [
-      { label: 'Black bears active in April', note: 'Males emerge March–April, hungry and food-motivated. Assume bears are active at any Metro Van campground.', type: 'warn' },
-      { label: 'Raccoons — the more likely nuisance', note: 'Bold at established campgrounds. Will open cooler latches and unzip tent vestibules.' },
-      { label: 'Food lockup: all food + scented items in locked vehicle', note: 'Includes toothpaste, sunscreen, deodorant. "Bare Campsite" rule: nothing out when sleeping.', type: 'bc', dep: 'The Meal → Cold Chain' },
-      { label: 'Do NOT hang food at frontcountry campgrounds', note: 'Counterintuitive but official BC Parks policy — hanging attracts wildlife to the campground.', type: 'bc' },
-      { label: 'Trash in bear-proof bins or locked vehicle', note: 'Never at the site overnight.' },
+      { label: 'Black bears active in April', note: 'Males emerge March–April, hungry and food-motivated. Assume bears are active at any Metro Van campground.', type: 'warn', kind: 'check' },
+      { label: 'Raccoons — the more likely nuisance', note: 'Bold at established campgrounds. Will open cooler latches and unzip tent vestibules.', kind: 'check' },
+      { label: 'Food lockup: all food + scented items in locked vehicle', note: 'Includes toothpaste, sunscreen, deodorant. "Bare Campsite" rule: nothing out when sleeping.', type: 'bc', dep: 'The Meal → Cold Chain', kind: 'check' },
+      { label: 'Do NOT hang food at frontcountry campgrounds', note: 'Counterintuitive but official BC Parks policy — hanging attracts wildlife to the campground.', type: 'bc', kind: 'check' },
+      { label: 'Trash in bear-proof bins or locked vehicle', note: 'Never at the site overnight.', kind: 'check' },
     ]},
     { label: 'Comfort Kit (per person)', note: 'The gap between "never again" and "when\'s the next one."', children: [
-      { label: 'Headlamp with red-light mode', note: 'One per person. Red mode preserves night vision. Clip to tent loop, not buried in bag.', dep: 'Shared Dep' },
-      { label: 'Camp chair', note: 'Standing around a fire for 6 hours is miserable. Borrow if needed — everyone needs a seat.' },
-      { label: 'Hot water bottle (Nalgene)', note: 'Fill with boiling water, wrap in sock, put in sleeping bag 15 min before bed.' },
-      { label: 'Hand/toe warmers (chemical)', note: 'Cheap insurance for cold sleepers. Toss one in the foot of the sleeping bag.' },
-      { label: 'Camp towel (small)', note: 'Wipe condensation from car windows or tent walls in the morning.' },
+      { label: 'Headlamp with red-light mode', note: 'One per person. Red mode preserves night vision. Clip to tent loop, not buried in bag.', dep: 'Shared Dep', kind: 'get' },
+      { label: 'Camp chair', note: 'Standing around a fire for 6 hours is miserable. Borrow if needed — everyone needs a seat.', kind: 'get' },
+      { label: 'Hot water bottle (Nalgene)', note: 'Fill with boiling water, wrap in sock, put in sleeping bag 15 min before bed.', kind: 'get' },
+      { label: 'Hand/toe warmers (chemical)', note: 'Cheap insurance for cold sleepers. Toss one in the foot of the sleeping bag.', kind: 'get' },
+      { label: 'Camp towel (small)', note: 'Wipe condensation from car windows or tent walls in the morning.', kind: 'get' },
     ]},
     { label: 'Quiet Hours & Etiquette', type: 'bc', children: [
-      { label: 'BC Parks quiet hours: 11 PM – 7 AM', note: 'Some parks differ (e.g., Alice Lake 10 PM). Check specific park page.', type: 'bc' },
-      { label: 'Speaker off or whisper volume at quiet hours', note: 'Sound carries extremely well over water and between sites. #1 campground complaint.' },
-      { label: 'Campfires out before sleeping', note: 'Enforced. Fines apply.', type: 'warn', dep: 'The Night → Fire Schedule' },
-      { label: 'Alcohol: legal only at registered campsite', note: 'No open alcohol in common areas.', type: 'bc' },
+      { label: 'BC Parks quiet hours: 11 PM – 7 AM', note: 'Some parks differ (e.g., Alice Lake 10 PM). Check specific park page.', type: 'bc', kind: 'check' },
+      { label: 'Speaker off or whisper volume at quiet hours', note: 'Sound carries extremely well over water and between sites. #1 campground complaint.', kind: 'check' },
+      { label: 'Campfires out before sleeping', note: 'Enforced. Fines apply.', type: 'warn', dep: 'The Night → Fire Schedule', kind: 'check' },
+      { label: 'Alcohol: legal only at registered campsite', note: 'No open alcohol in common areas.', type: 'bc', kind: 'check' },
     ]},
     { label: 'Safety Protocol', children: [
-      { label: 'CO warning: never run engine or use propane inside car/tent', note: 'Colourless, odourless, lethal. Not even "just for heat." Battery CO detector ~$25 if anyone sleeps in car.', type: 'warn' },
-      { label: 'Mark tent guylines with reflective cord or glow sticks', note: 'If tent is near foot traffic path.' },
-      { label: 'Clear bathroom path before dark', note: 'Walk the route once by headlamp. Designate a direction for overnight bathroom trips.' },
-      { label: 'Head count before lights-out' },
+      { label: 'CO warning: never run engine or use propane inside car/tent', note: 'Colourless, odourless, lethal. Not even "just for heat." Battery CO detector ~$25 if anyone sleeps in car.', type: 'warn', kind: 'check' },
+      { label: 'Mark tent guylines with reflective cord or glow sticks', note: 'If tent is near foot traffic path.', kind: 'get' },
+      { label: 'Clear bathroom path before dark', note: 'Walk the route once by headlamp. Designate a direction for overnight bathroom trips.', kind: 'check' },
+      { label: 'Head count before lights-out', kind: 'check' },
       { label: 'Nobody walks alone beyond campsite perimeter', note: 'Within campsite solo is fine. Trail walks: pairs.', type: 'know' },
-      { label: 'First aid kit', note: 'Bandages, antiseptic, blister pads, ibuprofen, antihistamine, tweezers.' },
-      { label: 'Nearest hospital saved offline', note: 'Cell coverage variable — Porteau Cove: good; Golden Ears interior: spotty.' },
-      { label: 'Set up camp fully BEFORE dark', note: 'Tents, sleeping gear, food storage, fire prep. All done in daylight. Non-negotiable for mixed-experience groups.', type: 'warn' },
+      { label: 'First aid kit', note: 'Bandages, antiseptic, blister pads, ibuprofen, antihistamine, tweezers.', kind: 'get' },
+      { label: 'Nearest hospital saved offline', note: 'Cell coverage variable — Porteau Cove: good; Golden Ears interior: spotty.', kind: 'check' },
+      { label: 'Set up camp fully BEFORE dark', note: 'Tents, sleeping gear, food storage, fire prep. All done in daylight. Non-negotiable for mixed-experience groups.', type: 'warn', kind: 'check' },
     ]},
   ]},
   { id: 'sunrise', label: 'The Sunrise', emoji: '🌅', minHours: 14,
     desc: 'Aspirational — plan for 2–3 motivated early risers, not the whole group.', children: [
     { label: 'Timing', children: [
-      { label: 'Alarm: 60–75 min before sunrise', note: 'Late April sunrise ~5:50–6:10 AM. Early April ~6:30–6:50 AM. Adjust to actual trip date.', liveKey: 'sunrise' },
+      { label: 'Alarm: 60–75 min before sunrise', note: 'Late April sunrise ~5:50–6:10 AM. Early April ~6:30–6:50 AM. Adjust to actual trip date.', liveKey: 'sunrise', kind: 'check' },
       { label: 'Civil twilight starts 30–35 min before sunrise', note: 'Sky starts colouring then. Best colour is 10–15 min before sun crests.', type: 'know' },
-      { label: 'Be in position during civil twilight', note: 'Not after sunrise — the best light happens before.' },
+      { label: 'Be in position during civil twilight', note: 'Not after sunrise — the best light happens before.', kind: 'check' },
     ]},
     { label: 'Viewing Location', children: [
-      { label: 'Pre-scout east-facing vantage the evening before', note: 'None of the candidate sites have classic ocean-sunrise views.', dep: 'Site Selection' },
+      { label: 'Pre-scout east-facing vantage the evening before', note: 'None of the candidate sites have classic ocean-sunrise views.', dep: 'Site Selection', kind: 'check' },
       { label: 'Porteau Cove: west-facing campsites', note: 'Sunrise is behind you, over mountains. But alpenglow on Howe Sound + Anvil Island is spectacular. Pier is best vantage.', type: 'know' },
       { label: 'Golden Ears / Alice Lake: forested, enclosed', note: 'Walk to lakeshore for open sky. Sunrise light filters through trees — pleasant but not dramatic.' },
       { label: 'Sasamat Lake: NE shore, faces SW', note: 'Calm lake catches early light. Peaceful, not dramatic.' },
@@ -405,15 +405,15 @@ const TREE = [
       { label: 'No talking at camp — whisper only. Regroup at viewing spot.' },
     ]},
     { label: 'Coffee at the viewpoint', children: [
-      { label: 'Thermos pre-filled the night before', note: 'No stove, no kettle, no boiling water at 4:30 AM. Silence is part of the experience.', dep: 'The Meal → Drinks' },
-      { label: 'Bring a camp chair or blanket to wrap in', dep: 'The Night → Comfort Kit' },
+      { label: 'Thermos pre-filled the night before', note: 'No stove, no kettle, no boiling water at 4:30 AM. Silence is part of the experience.', dep: 'The Meal → Drinks', kind: 'check' },
+      { label: 'Bring a camp chair or blanket to wrap in', dep: 'The Night → Comfort Kit', kind: 'check' },
     ]},
-    { label: 'Full layering on', dep: 'The Night → Layering' },
+    { label: 'Full layering on', dep: 'The Night → Layering', kind: 'check' },
     { label: 'Dawn Chorus', type: 'know', children: [
       { label: 'Birds begin 30–60 min before sunrise', note: 'April Vancouver: robins and thrushes from ~4–5 AM, full chorus by 5:00–5:30 AM.' },
       { label: 'This IS the soundtrack', note: 'No music, no talking. Let it happen.' },
     ]},
-    { label: 'Pre-dawn fire rebuild (optional)', note: 'Loud — crackling, blowing on coals. Only if the viewing spot is at the fire pit, not near tents.', dep: 'The Fire' },
+    { label: 'Pre-dawn fire rebuild (optional)', note: 'Loud — crackling, blowing on coals. Only if the viewing spot is at the fire pit, not near tents.', dep: 'The Fire', kind: 'check' },
     { label: 'Photography', type: 'know', children: [
       { label: 'Clean phone lens (overnight condensation)' },
       { label: 'Lock exposure on brightest sky — let foreground silhouette', note: 'Silhouettes of friends holding coffee, the fire’s last embers with dawn sky behind.' },
@@ -425,15 +425,15 @@ const TREE = [
   { id: 'music', label: 'Music & Games', emoji: '🎸', minHours: 0,
     desc: 'Orbits The Fire. Arc: upbeat evening → mellow late night → contemplative pre-dawn.', children: [
     { label: 'Guitar', note: 'Everett — see HAN-2', children: [
-      { label: 'Clip-on tuner (Snark or similar)', note: 'Cold makes strings go flat unpredictably. Retune between songs.' },
+      { label: 'Clip-on tuner (Snark or similar)', note: 'Cold makes strings go flat unpredictably. Retune between songs.', kind: 'get' },
       { label: 'Let guitar acclimate 30 min in closed case', note: 'Prevents finish checking from rapid temp change.', type: 'know' },
       { label: 'Case stays closed when not playing', note: 'Damp can swell the top. One night won’t cause permanent damage, but don’t leave it out.' },
-      { label: 'If rain threatens: guitar in case immediately', note: 'A garbage bag over the case is a reasonable backup.' },
+      { label: 'If rain threatens: guitar in case immediately', note: 'A garbage bag over the case is a reasonable backup.', kind: 'check' },
     ]},
     { label: 'Bluetooth speaker', children: [
-      { label: 'IPX7-rated (waterproof)', note: 'JBL Flip series or Anker Soundcore. Survives rain and spills.' },
-      { label: 'Battery: 8–10 usable hours in April cold', note: 'Cold (<5°C) cuts battery 20–30%. Plan at 30–40% volume.' },
-      { label: 'Power bank as backup charger', dep: 'Shared Dep' },
+      { label: 'IPX7-rated (waterproof)', note: 'JBL Flip series or Anker Soundcore. Survives rain and spills.', kind: 'get' },
+      { label: 'Battery: 8–10 usable hours in April cold', note: 'Cold (<5°C) cuts battery 20–30%. Plan at 30–40% volume.', kind: 'check' },
+      { label: 'Power bank as backup charger', dep: 'Shared Dep', kind: 'get' },
       { label: 'Strategy: guitar for singalongs, speaker for ambient', note: 'Extends both guitar player stamina and battery life.', type: 'know' },
     ]},
     { label: 'Playlist Arc', type: 'know', children: [
@@ -443,12 +443,12 @@ const TREE = [
       { label: 'Pre-dawn (midnight–4 AM): ambient, classical guitar, or silence', note: 'Bon Iver territory. Or just the fire and the night.' },
     ]},
     { label: 'Card & Board Games', children: [
-      { label: 'Waterproof playing cards', note: 'Hoyle or similar, ~$8. One deck enables dozens of games. Resist wind better than paper.' },
-      { label: 'Love Letter', note: '16 cards, fast rounds (5 min), easy to teach. 2–6 players.' },
-      { label: 'Coup', note: '15 cards, bluffing/deduction. 2–6 players.' },
-      { label: 'The Mind', note: 'Cooperative, eerie, works great at night. 2–4 players.' },
-      { label: "We're Not Really Strangers", note: 'Conversation card game. Perfect for firelight — read one card at a time.' },
-      { label: 'Bluff / Liar’s Dice', note: '5 dice + cup per person. Works in total darkness.' },
+      { label: 'Waterproof playing cards', note: 'Hoyle or similar, ~$8. One deck enables dozens of games. Resist wind better than paper.', kind: 'get' },
+      { label: 'Love Letter', note: '16 cards, fast rounds (5 min), easy to teach. 2–6 players.', kind: 'get' },
+      { label: 'Coup', note: '15 cards, bluffing/deduction. 2–6 players.', kind: 'get' },
+      { label: 'The Mind', note: 'Cooperative, eerie, works great at night. 2–4 players.', kind: 'get' },
+      { label: "We're Not Really Strangers", note: 'Conversation card game. Perfect for firelight — read one card at a time.', kind: 'get' },
+      { label: "Bluff / Liar's Dice", note: '5 dice + cup per person. Works in total darkness.', kind: 'get' },
     ]},
     { label: 'Verbal / No-Equipment Games', type: 'know', children: [
       { label: 'Mafia / Werewolf', note: 'Purely verbal with eyes-closed mechanic. 4–6 players ideal. Works perfectly in firelight.' },
@@ -457,46 +457,46 @@ const TREE = [
       { label: 'Fortunately/Unfortunately', note: 'Alternating storytelling. Hilarious.' },
     ]},
     { label: 'Stargazing', children: [
-      { label: 'Stellarium Mobile (free app)', note: 'Point phone at sky, identifies constellations in real time.' },
+      { label: 'Stellarium Mobile (free app)', note: 'Point phone at sky, identifies constellations in real time.', kind: 'get' },
       { label: 'April sky: Leo overhead, Summer Triangle rising pre-dawn', note: 'Orion setting in west early evening. Vega, Deneb, Altair rising east by 4 AM.', type: 'know' },
       { label: 'Invent your own constellations', note: 'Name them after people in the group. Low-effort, high-memory-making.', type: 'know' },
     ]},
     { label: 'Practical', children: [
-      { label: 'Headlamp on red mode for game lighting', dep: 'Shared Dep' },
-      { label: 'LED lantern on low at centre of game circle', note: 'Firelight alone is enough for Uno but not standard playing cards.' },
-      { label: 'Flat surface: cooler lid, cutting board, or camp chair tray', note: 'Cards on the ground = lost cards.' },
+      { label: 'Headlamp on red mode for game lighting', dep: 'Shared Dep', kind: 'check' },
+      { label: 'LED lantern on low at centre of game circle', note: 'Firelight alone is enough for Uno but not standard playing cards.', kind: 'get' },
+      { label: 'Flat surface: cooler lid, cutting board, or camp chair tray', note: 'Cards on the ground = lost cards.', kind: 'check' },
       { label: 'If windy: pivot to verbal games', note: 'Have the backup plan ready. Wind is the enemy of card games.', type: 'know' },
     ]},
-    { label: 'Sage bundle', note: 'Toss into fire — mosquito deterrent, smells excellent' },
+    { label: 'Sage bundle', note: 'Toss into fire — mosquito deterrent, smells excellent', kind: 'get' },
   ]},
   { id: 'morning', label: 'The Morning After', emoji: '☕', minHours: 15,
     desc: 'Post-sunrise. Break camp, hit a diner.', children: [
     { label: 'Breakfast Run', children: [
-      { label: "Fergie's Café, Squamish", note: 'Opens 9:00 AM. GF options. Sunwolf Resort, Brackendale. No reservations.', dietary: ['celiac'] },
-      { label: 'Peaked Pies, Squamish', note: 'Opens 7:00 AM' },
-      { label: 'Freebird Table & Bar, Squamish', note: 'Opens 7:00 AM. Earliest Squamish option.' },
-      { label: 'Copper Beach Bar + Kitchen, Britannia Beach', note: 'Closest to Porteau Cove. Miners Breakfast.' },
-      { label: 'Dutch Pannekoek Haus, Chilliwack', note: 'Opens 8:00 AM. 2+ hrs from all candidate sites — only if heading east after.', dietary: ['celiac'], type: 'warn' },
+      { label: "Fergie's Café, Squamish", note: 'Opens 9:00 AM. GF options. Sunwolf Resort, Brackendale. No reservations.', dietary: ['celiac'], kind: 'check' },
+      { label: 'Peaked Pies, Squamish', note: 'Opens 7:00 AM', kind: 'check' },
+      { label: 'Freebird Table & Bar, Squamish', note: 'Opens 7:00 AM. Earliest Squamish option.', kind: 'check' },
+      { label: 'Copper Beach Bar + Kitchen, Britannia Beach', note: 'Closest to Porteau Cove. Miners Breakfast.', kind: 'check' },
+      { label: 'Dutch Pannekoek Haus, Chilliwack', note: 'Opens 8:00 AM. 2+ hrs from all candidate sites — only if heading east after.', dietary: ['celiac'], type: 'warn', kind: 'check' },
     ]},
     { label: 'Camp Breakdown', children: [
-      { label: 'Extinguish fire completely', note: 'Drown, stir, drown, feel with back of hand. If warm, repeat.', dep: 'The Fire → Safety' },
-      { label: 'Full-site trash sweep', note: 'Grid-walk the campsite. Micro-trash (bottle caps, foil bits, twist ties) is most commonly missed.' },
-      { label: 'Pack out ALL waste', note: 'Including food scraps, fruit peels, eggshells. Double-bag wet trash.' },
-      { label: 'Greywater: strain solids, scatter water 200ft from water source', note: 'Pack out the strained food particles.', type: 'bc' },
-      { label: 'Restore site to natural state', note: 'Replace moved rocks/logs. Fluff matted grass. Scatter leaves/needles over bare spots.' },
-      { label: 'Check bear cache / food locker emptied', dep: 'The Night → Wildlife' },
-      { label: 'Final walk-through before departure' },
+      { label: 'Extinguish fire completely', note: 'Drown, stir, drown, feel with back of hand. If warm, repeat.', dep: 'The Fire → Safety', kind: 'check' },
+      { label: 'Full-site trash sweep', note: 'Grid-walk the campsite. Micro-trash (bottle caps, foil bits, twist ties) is most commonly missed.', kind: 'check' },
+      { label: 'Pack out ALL waste', note: 'Including food scraps, fruit peels, eggshells. Double-bag wet trash.', kind: 'check' },
+      { label: 'Greywater: strain solids, scatter water 200ft from water source', note: 'Pack out the strained food particles.', type: 'bc', kind: 'check' },
+      { label: 'Restore site to natural state', note: 'Replace moved rocks/logs. Fluff matted grass. Scatter leaves/needles over bare spots.', kind: 'check' },
+      { label: 'Check bear cache / food locker emptied', dep: 'The Night → Wildlife', kind: 'check' },
+      { label: 'Final walk-through before departure', kind: 'check' },
     ]},
     { label: 'Post-Trip Gear Care', note: 'Do same-day — mildew starts within 24–48 hours.', children: [
-      { label: 'Tent: set up at home to dry before storing', note: 'Storing wet = mildew = ruined tent.' },
-      { label: 'Sleeping bags: hang or drape, never stuff wet' },
-      { label: 'Tarps: hang to dry' },
-      { label: 'Cooler: drain at site, wash with baking soda at home', note: 'If fish/meat stored: dilute bleach wash, rinse thoroughly.' },
-      { label: 'Car: tarp/garbage bags in trunk before loading wet gear' },
+      { label: 'Tent: set up at home to dry before storing', note: 'Storing wet = mildew = ruined tent.', kind: 'check' },
+      { label: 'Sleeping bags: hang or drape, never stuff wet', kind: 'check' },
+      { label: 'Tarps: hang to dry', kind: 'check' },
+      { label: 'Cooler: drain at site, wash with baking soda at home', note: 'If fish/meat stored: dilute bleach wash, rinse thoroughly.', kind: 'check' },
+      { label: 'Car: tarp/garbage bags in trunk before loading wet gear', kind: 'check' },
     ]},
     { label: 'Trip Memory', children: [
-      { label: 'Shared photo album (Google Photos or Apple Shared)', note: 'Create before the trip, share link in group chat. Everyone uploads.' },
-      { label: 'Group photo before breaking camp', note: 'Easiest to forget in the departure rush.' },
+      { label: 'Shared photo album (Google Photos or Apple Shared)', note: 'Create before the trip, share link in group chat. Everyone uploads.', kind: 'check' },
+      { label: 'Group photo before breaking camp', note: 'Easiest to forget in the departure rush.', kind: 'check' },
     ]},
   ]},
   { id: 'ntg', label: 'Nice-to-Haves', emoji: '✶', minHours: 0,
@@ -884,103 +884,138 @@ function RecipesView() {
 
 //  Checklist View
 function deriveChecklist(hours) {
-  const sections = [];
-  function collectLeaves(node, acc) {
+  const checks = [];
+  const gets = [];
+  function collectLeaves(node, rootMeta) {
     if (node.type === 'know') return;
     if (node.type === 'dep') return;
     const children = (node.children || []).filter(c => !c.minHours || hours >= c.minHours);
     const actionableKids = children.filter(c => c.type !== 'know' && c.type !== 'dep');
     if (actionableKids.length === 0) {
-      acc.push({ label: node.label, note: node.note, type: node.type, dietary: node.dietary });
+      if (!node.kind) return;
+      const item = { label: node.label, note: node.note, type: node.type, dietary: node.dietary, section: rootMeta };
+      if (node.kind === 'check') checks.push(item);
+      else if (node.kind === 'get') gets.push(item);
     } else {
-      for (const child of children) collectLeaves(child, acc);
+      for (const child of children) collectLeaves(child, rootMeta);
     }
   }
   for (const root of TREE) {
     if (root.minHours && hours < root.minHours) continue;
-    if (root.id === 'ntg') continue; // nice-to-haves are optional, skip from checklist
-    const items = [];
-    for (const child of (root.children || [])) collectLeaves(child, items);
-    if (items.length > 0) sections.push({ id: root.id, label: root.label, emoji: root.emoji, items });
+    if (root.id === 'ntg') continue;
+    const rootMeta = { id: root.id, label: root.label, emoji: root.emoji };
+    for (const child of (root.children || [])) collectLeaves(child, rootMeta);
   }
-  return sections;
+  return { checks, gets };
 }
 
 function ChecklistView() {
   const hours = useContext(DurationCtx);
   const [checked, setChecked] = useState({});
   const toggle = key => setChecked(c => ({ ...c, [key]: !c[key] }));
-  const sections = deriveChecklist(hours);
-  const totalItems = sections.reduce((n, s) => n + s.items.length, 0);
-  const doneCount = Object.values(checked).filter(Boolean).length;
+  const { checks, gets } = deriveChecklist(hours);
+
+  function groupBySection(items) {
+    const map = new Map();
+    for (const item of items) {
+      const sid = item.section.id;
+      if (!map.has(sid)) map.set(sid, { ...item.section, items: [] });
+      map.get(sid).items.push(item);
+    }
+    return [...map.values()];
+  }
+
+  const checkSections = groupBySection(checks);
+  const getSections = groupBySection(gets);
+  const doneChecks = checks.filter(i => checked[`${i.section.id}:${i.label}`]).length;
+  const doneGets = gets.filter(i => checked[`${i.section.id}:${i.label}`]).length;
+  const doneTotal = doneChecks + doneGets;
+  const totalItems = checks.length + gets.length;
+
+  function renderItem(item) {
+    const key = `${item.section.id}:${item.label}`;
+    const done = !!checked[key];
+    const typeColor = item.type === 'bc' ? C.bc : item.type === 'warn' ? C.warn : null;
+    return (
+      <div key={key} onClick={() => toggle(key)}
+        style={{ display: 'flex', alignItems: 'flex-start', gap: 10,
+          padding: '7px 12px', cursor: 'pointer',
+          borderBottom: `1px solid ${C.border2}`, transition: 'background 0.1s',
+          opacity: done ? 0.45 : 1 }}
+        onMouseEnter={e => e.currentTarget.style.background = C.s2}
+        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+      >
+        <div style={{ width: 15, height: 15, flexShrink: 0, marginTop: 2,
+          border: `1px solid ${done ? C.amber : (typeColor || C.dim)}`,
+          borderRadius: 3, background: done ? C.amber : 'transparent',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'all 0.15s' }}>
+          {done && <span style={{ color: C.bg, fontSize: 10, fontWeight: 700 }}>✓</span>}
+        </div>
+        <div style={{ flex: 1 }}>
+          <span style={{ fontSize: 12, color: typeColor || C.text,
+            fontFamily: "'JetBrains Mono',monospace",
+            textDecoration: done ? 'line-through' : 'none' }}>
+            {item.label}
+          </span>
+          {item.dietary?.map(d => <DietBadge key={d} d={d} />)}
+          {item.note && (
+            <div style={{ fontSize: 10, color: C.dim, marginTop: 1, fontStyle: 'italic' }}>
+              {item.note}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  function renderBucket(title, sections, done, total, accentColor) {
+    if (sections.length === 0) return null;
+    return (
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10,
+          padding: '10px 16px', background: C.s1,
+          borderRadius: '8px 8px 0 0', border: `1px solid ${C.border}`,
+          borderBottom: `2px solid ${accentColor}55` }}>
+          <span style={{ fontFamily: "'Cormorant Garamond',Georgia,serif",
+            fontSize: 17, fontWeight: 700, color: accentColor }}>{title}</span>
+          <span style={{ marginLeft: 'auto', fontSize: 11,
+            color: done === total ? C.sage : C.dim,
+            fontFamily: "'JetBrains Mono',monospace" }}>{done} / {total}</span>
+        </div>
+        <div style={{ border: `1px solid ${C.border}`, borderTop: 'none',
+          borderRadius: '0 0 8px 8px', overflow: 'hidden', background: C.bg }}>
+          {sections.map(sec => (
+            <div key={sec.id}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8,
+                padding: '4px 12px', background: C.s1,
+                borderBottom: `1px solid ${C.border}` }}>
+                <span style={{ fontSize: 11 }}>{sec.emoji}</span>
+                <span style={{ fontSize: 10, color: C.muted, letterSpacing: '0.03em',
+                  fontFamily: "'JetBrains Mono',monospace" }}>{sec.label}</span>
+              </div>
+              {sec.items.map(item => renderItem(item))}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        marginBottom: 16, padding: '10px 16px', background: C.s1,
+        marginBottom: 20, padding: '10px 16px', background: C.s1,
         borderRadius: 8, border: `1px solid ${C.border}` }}>
         <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif",
           fontSize: 15, color: C.amber }}>Everything Checklist</div>
-        <div style={{ fontSize: 11, color: doneCount === totalItems ? C.sage : C.muted,
+        <div style={{ fontSize: 11, color: doneTotal === totalItems ? C.sage : C.muted,
           fontFamily: "'JetBrains Mono',monospace" }}>
-          {doneCount} / {totalItems}
+          {doneTotal} / {totalItems}
         </div>
       </div>
-      {sections.map(sec => (
-        <div key={sec.id} style={{ marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8,
-            padding: '7px 12px', background: C.s1,
-            borderRadius: '6px 6px 0 0', border: `1px solid ${C.border}`,
-            borderBottom: 'none' }}>
-            <span style={{ fontSize: 14 }}>{sec.emoji}</span>
-            <span style={{ fontFamily: "'Cormorant Garamond',Georgia,serif",
-              fontSize: 15, fontWeight: 600, color: C.amber }}>{sec.label}</span>
-            <span style={{ marginLeft: 'auto', fontSize: 10, color: C.dim,
-              fontFamily: "'JetBrains Mono',monospace" }}>
-              {sec.items.filter((_, i) => checked[`${sec.id}:${i}`]).length}/{sec.items.length}
-            </span>
-          </div>
-          <div style={{ border: `1px solid ${C.border}`, borderRadius: '0 0 6px 6px',
-            background: C.bg, overflow: 'hidden' }}>
-            {sec.items.map((item, i) => {
-              const key = `${sec.id}:${i}`;
-              const done = !!checked[key];
-              const typeColor = item.type === 'bc' ? C.bc : item.type === 'warn' ? C.warn : null;
-              return (
-                <div key={key} onClick={() => toggle(key)}
-                  style={{ display: 'flex', alignItems: 'flex-start', gap: 10,
-                    padding: '7px 12px', cursor: 'pointer',
-                    borderBottom: `1px solid ${C.border2}`, transition: 'background 0.1s',
-                    opacity: done ? 0.45 : 1 }}
-                  onMouseEnter={e => e.currentTarget.style.background = C.s2}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  <div style={{ width: 15, height: 15, flexShrink: 0, marginTop: 2,
-                    border: `1px solid ${done ? C.amber : (typeColor || C.dim)}`,
-                    borderRadius: 3, background: done ? C.amber : 'transparent',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'all 0.15s' }}>
-                    {done && <span style={{ color: C.bg, fontSize: 10, fontWeight: 700 }}>✓</span>}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <span style={{ fontSize: 12, color: typeColor || C.text,
-                      fontFamily: "'JetBrains Mono',monospace",
-                      textDecoration: done ? 'line-through' : 'none' }}>
-                      {item.label}
-                    </span>
-                    {item.dietary?.map(d => <DietBadge key={d} d={d} />)}
-                    {item.note && (
-                      <div style={{ fontSize: 10, color: C.dim, marginTop: 1, fontStyle: 'italic' }}>
-                        {item.note}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+      {renderBucket('Information Pulls', checkSections, doneChecks, checks.length, C.bc)}
+      {renderBucket('Procurement', getSections, doneGets, gets.length, C.amber)}
     </div>
   );
 }
