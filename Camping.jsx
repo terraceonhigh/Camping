@@ -143,6 +143,19 @@ const DIETARY = [
     detail: 'No land meat. Dedicated fish/seafood skewers needed. Colour-code skewers.' },
 ];
 
+const NICE_TO_HAVES = [
+  { label: 'Bluetooth speaker for music' },
+  { label: 'Cards or games for around the fire' },
+  { label: 'Thermoses for keeping coffee hot' },
+  { label: 'Extra tarps for ground cover' },
+  { label: 'Portable phone charger' },
+  { label: 'String lights for camp ambiance' },
+  { label: 'Folding camp chairs (2–3 minimum)' },
+  { label: 'Lantern for camp area lighting' },
+  { label: 'Star map app or printed constellation guide' },
+  { label: 'Sketchbooks or journals for the slow hours' },
+];
+
 const TREE = [
   { id: 'preflight', label: 'Pre-Flight Checks', emoji: '✓', minHours: 0,
     desc: 'Must resolve before departure', children: [
@@ -532,19 +545,6 @@ const INGREDIENTS = [
   { name: 'Sausages',                  tags: [],                    recipes: ['Sausage Wraps','Late-Night Quesadillas (opt.)'] },
   { name: 'Butter + garlic',           tags: ['vegetarian','gf'],   recipes: ['Shrimp Tacos','Halloumi & Veggie Skewers','Butter Garlic Shrimp','Pre-Dawn Scrambled Eggs'] },
   { name: 'Hot sauce + lime',          tags: ['vegan','gf'],        recipes: ['Shrimp Tacos','Halloumi & Veggie Skewers','Sausage Wraps','Butter Garlic Shrimp'] },
-];
-
-const NICE_TO_HAVES = [
-  { label: 'Bluetooth speaker for music' },
-  { label: 'Cards or games for around the fire' },
-  { label: 'Thermoses for keeping coffee hot' },
-  { label: 'Extra tarps for ground cover' },
-  { label: 'Portable phone charger' },
-  { label: 'String lights for camp ambiance' },
-  { label: 'Folding camp chairs (2–3 minimum)' },
-  { label: 'Lantern for camp area lighting' },
-  { label: 'Star map app or printed constellation guide' },
-  { label: 'Sketchbooks or journals for the slow hours' },
 ];
 
 const SHARED_DEPS = [
