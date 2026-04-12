@@ -2,14 +2,16 @@ import { useState, useEffect, createContext, useContext, useCallback } from "rea
 
 const DurationCtx = createContext(14);
 const LiveDataCtx = createContext(null);
+const SiteCtx     = createContext(null);
 
-function useLiveData() {
+function useLiveData(lat, lng) {
   const [data, setData] = useState({ weather: null, astronomy: null, forecast: null, fireBans: null, loading: true, error: null, lastUpdated: null });
 
   const fetchAll = useCallback(async () => {
+    const loc = (lat != null && lng != null) ? `${lat},${lng}` : 'Vancouver';
     try {
       const [weatherRes, bansRes] = await Promise.allSettled([
-        fetch('https://wttr.in/Vancouver?format=j1').then(r => r.json()),
+        fetch(`https://wttr.in/${loc}?format=j1`).then(r => r.json()),
         fetch('/api/bc-fire-bans').then(r => r.json()),
       ]);
 
@@ -28,7 +30,7 @@ function useLiveData() {
     } catch (e) {
       setData(prev => ({ ...prev, loading: false, error: e.message }));
     }
-  }, []);
+  }, [lat, lng]);
 
   useEffect(() => {
     fetchAll();
@@ -141,6 +143,96 @@ const DIETARY = [
     detail: 'GF products recommended. Strict cross-contamination protocols not required. Shared skewers fine. Wheat beer off-limits.' },
   { tag: 'pescatarian', color: C.bc, label: 'Pescatarian',
     detail: 'No land meat. Dedicated fish/seafood skewers needed. Colour-code skewers.' },
+];
+
+const SITES = [
+  {
+    id: 'porteau',
+    name: 'Porteau Cove Provincial Park',
+    short: 'Porteau Cove',
+    coords: { lat: 49.5535, lng: -123.2362 },
+    driveTimeMin: 50,
+    highway: 'Hwy 99 (Sea-to-Sky)',
+    driveBC: '99',
+    bcparks: 'https://bcparks.ca/porteau-cove-provincial-park/',
+    discoverCamping: 'https://camping.bcparks.ca/',
+    fireAllowed: true,
+    cell: 'good',
+    notes: 'Oceanfront. West-facing — alpenglow on Howe Sound at sunrise. Pier is best vantage.',
+  },
+  {
+    id: 'golden_ears',
+    name: 'Golden Ears Provincial Park',
+    short: 'Golden Ears',
+    coords: { lat: 49.3497, lng: -122.4724 },
+    driveTimeMin: 70,
+    highway: 'Hwy 7 (Lougheed)',
+    driveBC: '7',
+    bcparks: 'https://bcparks.ca/golden-ears-provincial-park/',
+    discoverCamping: 'https://camping.bcparks.ca/',
+    fireAllowed: true,
+    cell: 'spotty',
+    notes: 'Forested. Interior cell spotty. Walk to lakeshore for open sky.',
+  },
+  {
+    id: 'alice_lake',
+    name: 'Alice Lake Provincial Park',
+    short: 'Alice Lake',
+    coords: { lat: 49.7784, lng: -123.1277 },
+    driveTimeMin: 65,
+    highway: 'Hwy 99 (Sea-to-Sky)',
+    driveBC: '99',
+    bcparks: 'https://bcparks.ca/alice-lake-provincial-park/',
+    discoverCamping: 'https://camping.bcparks.ca/',
+    fireAllowed: true,
+    cell: 'moderate',
+    notes: 'Quiet hours 10 PM (earlier than BC Parks standard).',
+  },
+  {
+    id: 'rocky_point',
+    name: 'Rocky Point Park',
+    short: 'Rocky Point (Port Moody)',
+    coords: { lat: 49.2837, lng: -122.8673 },
+    driveTimeMin: 35,
+    highway: 'Barnet Hwy',
+    driveBC: null,
+    bcparks: null,
+    discoverCamping: null,
+    parkUrl: 'https://www.portmoody.ca/en/parks-recreation-culture/parks/rocky-point-park.aspx',
+    fireAllowed: false,
+    cell: 'good',
+    notes: 'Municipal park. Best transit access. Day-use only — no overnight camping.',
+  },
+  {
+    id: 'sasamat',
+    name: 'White Pine Beach / Sasamat Lake',
+    short: 'Sasamat Lake (Belcarra)',
+    coords: { lat: 49.2995, lng: -122.8766 },
+    driveTimeMin: 40,
+    highway: 'Ioco Rd (Belcarra)',
+    driveBC: null,
+    bcparks: null,
+    discoverCamping: null,
+    parkUrl: 'https://metrovancouver.org/parks-outdoors/parks/belcarra-regional-park',
+    fireAllowed: false,
+    cell: 'moderate',
+    notes: 'Metro Vancouver Regional Park. Day-use only. Calm lake.',
+  },
+  {
+    id: 'barnet',
+    name: 'Barnet Marine Park',
+    short: 'Barnet Marine (Burnaby)',
+    coords: { lat: 49.2844, lng: -122.9363 },
+    driveTimeMin: 25,
+    highway: 'Barnet Hwy',
+    driveBC: null,
+    bcparks: null,
+    discoverCamping: null,
+    parkUrl: 'https://metrovancouver.org/parks-outdoors/parks/barnet-marine-park',
+    fireAllowed: false,
+    cell: 'good',
+    notes: 'Closest option. Day-use only. No fire pits.',
+  },
 ];
 
 const NICE_TO_HAVES = [
@@ -577,7 +669,55 @@ function DepBadge({ label }) {
     borderRadius: 3, padding: '1px 5px', marginLeft: 5 }}>→ {label}</span>;
 }
 
-//  Duration Slider 
+//  Site Selector
+function SiteSelector() {
+  const selected = useContext(SiteCtx);
+  // SiteCtx holds the setter too; see App for provider shape
+  const { site, setSite } = selected;
+  return (
+    <div style={{ padding: '9px 28px 10px', background: C.s1,
+      borderBottom: `1px solid ${C.border}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 10, color: C.dim, fontFamily: "'JetBrains Mono',monospace",
+          textTransform: 'uppercase', letterSpacing: '0.07em', flexShrink: 0 }}>Site</span>
+        <select
+          value={site?.id || ''}
+          onChange={e => setSite(SITES.find(s => s.id === e.target.value) || null)}
+          style={{ background: C.bg, color: site ? C.text : C.muted,
+            border: `1px solid ${C.border}`, borderRadius: 4,
+            padding: '4px 8px', fontSize: 12,
+            fontFamily: "'JetBrains Mono',monospace",
+            cursor: 'pointer', outline: 'none', minWidth: 230 }}
+        >
+          <option value=''>— not yet selected —</option>
+          {SITES.map(s => (
+            <option key={s.id} value={s.id}>{s.short} · {s.driveTimeMin} min</option>
+          ))}
+        </select>
+        {site && (
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap',
+            fontSize: 10, fontFamily: "'JetBrains Mono',monospace" }}>
+            <span style={{ color: C.dim }}>{site.highway}</span>
+            <span style={{ color: site.fireAllowed ? C.sage : C.warn }}>
+              {site.fireAllowed ? '✓ fire allowed' : '✗ no fires'}
+            </span>
+            <span style={{
+              color: site.cell === 'good' ? C.sage : site.cell === 'spotty' ? C.warn : C.muted
+            }}>cell: {site.cell}</span>
+          </div>
+        )}
+      </div>
+      {site?.notes && (
+        <div style={{ marginTop: 4, fontSize: 10, color: C.dim,
+          fontFamily: "'JetBrains Mono',monospace", fontStyle: 'italic' }}>
+          {site.notes}
+        </div>
+      )}
+    </div>
+  );
+}
+
+//  Duration Slider
 function DurationSlider({ hours, setHours }) {
   const dl = getDurationLabel(hours);
   const pct = ((hours - 1) / 35) * 100;
@@ -1109,7 +1249,8 @@ export default function App() {
 
   const [tab, setTab]     = useState('tree');
   const [hours, setHours] = useState(14);
-  const liveData = useLiveData();
+  const [site, setSite]   = useState(null);
+  const liveData = useLiveData(site?.coords?.lat, site?.coords?.lng);
 
   const TABS = [
     { id: 'tree',      label: '⧁  Dep Tree' },
@@ -1119,6 +1260,7 @@ export default function App() {
   ];
 
   return (
+    <SiteCtx.Provider value={{ site, setSite }}>
     <DurationCtx.Provider value={hours}>
     <LiveDataCtx.Provider value={liveData}>
       <div style={{ background: C.bg, color: C.text, minHeight: '100vh',
@@ -1150,6 +1292,9 @@ export default function App() {
         {/* Duration Slider */}
         <DurationSlider hours={hours} setHours={setHours} />
 
+        {/* Site Selector */}
+        <SiteSelector />
+
         {/* Tab Bar */}
         <div style={{ display: 'flex', background: C.s1,
           borderBottom: `1px solid ${C.border}`, padding: '0 28px' }}>
@@ -1175,6 +1320,7 @@ export default function App() {
       </div>
     </LiveDataCtx.Provider>
     </DurationCtx.Provider>
+    </SiteCtx.Provider>
   );
 }
 
