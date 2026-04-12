@@ -145,6 +145,11 @@ const DIETARY = [
     detail: 'No land meat. Dedicated fish/seafood skewers needed. Colour-code skewers.' },
 ];
 
+const DEPARTURE = {
+  label: 'SFU Burnaby Campus',
+  coords: { lat: 49.2786, lng: -122.9198 },
+};
+
 const SITES = [
   {
     id: 'porteau',
@@ -669,11 +674,31 @@ function DepBadge({ label }) {
     borderRadius: 3, padding: '1px 5px', marginLeft: 5 }}>→ {label}</span>;
 }
 
+//  Drive Times (OSRM)
+function useDriveTimes() {
+  const [times, setTimes] = useState({});
+  useEffect(() => {
+    const { lat, lng } = DEPARTURE.coords;
+    Promise.all(
+      SITES.map(async site => {
+        try {
+          const url = `https://router.project-osrm.org/route/v1/driving/${lng},${lat};${site.coords.lng},${site.coords.lat}?overview=false`;
+          const data = await fetch(url).then(r => r.json());
+          const route = data.routes?.[0];
+          if (route) return [site.id, { minutes: Math.round(route.duration / 60), km: Math.round(route.distance / 1000) }];
+        } catch (_) {}
+        return [site.id, null];
+      })
+    ).then(entries => setTimes(Object.fromEntries(entries)));
+  }, []);
+  return times;
+}
+
 //  Site Selector
 function SiteSelector() {
-  const selected = useContext(SiteCtx);
-  // SiteCtx holds the setter too; see App for provider shape
-  const { site, setSite } = selected;
+  const { site, setSite, driveTimes } = useContext(SiteCtx);
+  const dt = site ? driveTimes[site.id] : null;
+  const hasAllTimes = SITES.every(s => driveTimes[s.id] != null);
   return (
     <div style={{ padding: '9px 28px 10px', background: C.s1,
       borderBottom: `1px solid ${C.border}` }}>
@@ -690,21 +715,33 @@ function SiteSelector() {
             cursor: 'pointer', outline: 'none', minWidth: 230 }}
         >
           <option value=''>— not yet selected —</option>
-          {SITES.map(s => (
-            <option key={s.id} value={s.id}>{s.short} · {s.driveTimeMin} min</option>
-          ))}
+          {SITES.map(s => {
+            const t = driveTimes[s.id];
+            const label = t ? `${t.minutes} min · ${t.km} km` : `~${s.driveTimeMin} min`;
+            return <option key={s.id} value={s.id}>{s.short} · {label}</option>;
+          })}
         </select>
         {site && (
           <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap',
             fontSize: 10, fontFamily: "'JetBrains Mono',monospace" }}>
+            {dt
+              ? <span style={{ color: C.text }}>{dt.minutes} min · {dt.km} km
+                  <span style={{ color: C.dim }}> from {DEPARTURE.label}</span></span>
+              : <span style={{ color: C.dim }}>routing…</span>
+            }
+            <span style={{ color: C.dim }}>·</span>
             <span style={{ color: C.dim }}>{site.highway}</span>
             <span style={{ color: site.fireAllowed ? C.sage : C.warn }}>
-              {site.fireAllowed ? '✓ fire allowed' : '✗ no fires'}
+              {site.fireAllowed ? '✓ fire' : '✗ no fires'}
             </span>
             <span style={{
               color: site.cell === 'good' ? C.sage : site.cell === 'spotty' ? C.warn : C.muted
             }}>cell: {site.cell}</span>
           </div>
+        )}
+        {!site && !hasAllTimes && (
+          <span style={{ fontSize: 10, color: C.dim, fontFamily: "'JetBrains Mono',monospace",
+            fontStyle: 'italic' }}>routing from {DEPARTURE.label}…</span>
         )}
       </div>
       {site?.notes && (
@@ -1250,7 +1287,8 @@ export default function App() {
   const [tab, setTab]     = useState('tree');
   const [hours, setHours] = useState(14);
   const [site, setSite]   = useState(null);
-  const liveData = useLiveData(site?.coords?.lat, site?.coords?.lng);
+  const liveData   = useLiveData(site?.coords?.lat, site?.coords?.lng);
+  const driveTimes = useDriveTimes();
 
   const TABS = [
     { id: 'tree',      label: '⧁  Dep Tree' },
@@ -1260,7 +1298,7 @@ export default function App() {
   ];
 
   return (
-    <SiteCtx.Provider value={{ site, setSite }}>
+    <SiteCtx.Provider value={{ site, setSite, driveTimes }}>
     <DurationCtx.Provider value={hours}>
     <LiveDataCtx.Provider value={liveData}>
       <div style={{ background: C.bg, color: C.text, minHeight: '100vh',
