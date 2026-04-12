@@ -396,6 +396,10 @@ const TREE = [
       { label: 'Bring a camp chair or blanket to wrap in', dep: 'The Night \u2192 Comfort Kit' },
     ]},
     { label: 'Full layering on', dep: 'The Night \u2192 Layering' },
+    { label: 'Dawn Chorus', type: 'know', children: [
+      { label: 'Birds begin 30\u201360 min before sunrise', note: 'April Vancouver: robins and thrushes from ~4\u20135 AM, full chorus by 5:00\u20135:30 AM.' },
+      { label: 'This IS the soundtrack', note: 'No music, no talking. Let it happen.' },
+    ]},
     { label: 'Pre-dawn fire rebuild (optional)', note: 'Loud \u2014 crackling, blowing on coals. Only if the viewing spot is at the fire pit, not near tents.', dep: 'The Fire' },
     { label: 'Photography', type: 'know', children: [
       { label: 'Clean phone lens (overnight condensation)' },
@@ -455,10 +459,11 @@ const TREE = [
   { id: 'morning', label: 'The Morning After', emoji: '\u2615', minHours: 15,
     desc: 'Post-sunrise. Break camp, hit a diner.', children: [
     { label: 'Breakfast Run', children: [
-      { label: "Fergie's Caf\u00e9, Squamish", note: 'Opens 6:30 AM. GF options.', dietary: ['celiac'] },
+      { label: "Fergie's Caf\u00e9, Squamish", note: 'Opens 9:00 AM. GF options. Sunwolf Resort, Brackendale. No reservations.', dietary: ['celiac'] },
       { label: 'Peaked Pies, Squamish', note: 'Opens 7:00 AM' },
-      { label: 'Dutch Pannekoek Haus, Chilliwack', note: 'Opens 8:00 AM', dietary: ['celiac'] },
-      { label: 'Sunflower Bakery Caf\u00e9, Squamish', note: 'Opens 7:00 AM. GF options available.', dietary: ['celiac'] },
+      { label: 'Freebird Table & Bar, Squamish', note: 'Opens 7:00 AM. Earliest Squamish option.' },
+      { label: 'Copper Beach Bar + Kitchen, Britannia Beach', note: 'Closest to Porteau Cove. Miners Breakfast.' },
+      { label: 'Dutch Pannekoek Haus, Chilliwack', note: 'Opens 8:00 AM. 2+ hrs from all candidate sites \u2014 only if heading east after.', dietary: ['celiac'], type: 'warn' },
     ]},
     { label: 'Camp Breakdown', children: [
       { label: 'Extinguish fire completely', note: 'Drown, stir, drown, feel with back of hand. If warm, repeat.', dep: 'The Fire \u2192 Safety' },
