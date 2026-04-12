@@ -486,6 +486,8 @@ const TREE = [
       { label: 'Group photo before breaking camp', note: 'Easiest to forget in the departure rush.' },
     ]},
   ]},
+  { id: 'ntg', label: 'Nice-to-Haves', emoji: '✶', minHours: 0,
+    desc: 'Elevate the experience. None are blocking.', children: NICE_TO_HAVES },
 ];
 
 const RECIPES = [
@@ -533,16 +535,16 @@ const INGREDIENTS = [
 ];
 
 const NICE_TO_HAVES = [
-  'Bluetooth speaker for music',
-  'Cards or games for around the fire',
-  'Thermoses for keeping coffee hot',
-  'Extra tarps for ground cover',
-  'Portable phone charger',
-  'String lights for camp ambiance',
-  'Folding camp chairs (2–3 minimum)',
-  'Lantern for camp area lighting',
-  'Star map app or printed constellation guide',
-  'Sketchbooks or journals for the slow hours',
+  { label: 'Bluetooth speaker for music' },
+  { label: 'Cards or games for around the fire' },
+  { label: 'Thermoses for keeping coffee hot' },
+  { label: 'Extra tarps for ground cover' },
+  { label: 'Portable phone charger' },
+  { label: 'String lights for camp ambiance' },
+  { label: 'Folding camp chairs (2–3 minimum)' },
+  { label: 'Lantern for camp area lighting' },
+  { label: 'Star map app or printed constellation guide' },
+  { label: 'Sketchbooks or journals for the slow hours' },
 ];
 
 const SHARED_DEPS = [
@@ -837,10 +839,24 @@ function RecipeCard({ r }) {
   );
 }
 
-//  Recipes View 
+//  Recipes View
 function RecipesView() {
   return (
     <div>
+      <div style={{ marginBottom: 16, border: `1px solid ${C.border}`, borderRadius: 8,
+        background: C.s1, overflow: 'hidden' }}>
+        <div style={{ padding: '10px 16px', borderBottom: `1px solid ${C.border}`,
+          fontFamily: "'Cormorant Garamond',Georgia,serif", fontSize: 15, color: C.amber }}>
+          Special Notes
+        </div>
+        {DIETARY.map(d => (
+          <div key={d.tag} style={{ padding: '10px 16px', borderBottom: `1px solid ${C.border2}`,
+            display: 'flex', gap: 8, alignItems: 'baseline' }}>
+            <span style={{ fontSize: 11, color: d.color, fontWeight: 600, flexShrink: 0 }}>⚠ {d.label}</span>
+            <span style={{ fontSize: 11, color: C.muted }}>{d.detail}</span>
+          </div>
+        ))}
+      </div>
       <div style={{ marginBottom: 20, padding: '12px 16px', background: C.s1,
         borderRadius: 8, border: `1px solid ${C.border}` }}>
         <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif",
@@ -866,7 +882,110 @@ function RecipesView() {
   );
 }
 
-//  Nice-to-Haves View 
+//  Checklist View
+function deriveChecklist(hours) {
+  const sections = [];
+  function collectLeaves(node, acc) {
+    if (node.type === 'know') return;
+    if (node.type === 'dep') return;
+    const children = (node.children || []).filter(c => !c.minHours || hours >= c.minHours);
+    const actionableKids = children.filter(c => c.type !== 'know' && c.type !== 'dep');
+    if (actionableKids.length === 0) {
+      acc.push({ label: node.label, note: node.note, type: node.type, dietary: node.dietary });
+    } else {
+      for (const child of children) collectLeaves(child, acc);
+    }
+  }
+  for (const root of TREE) {
+    if (root.minHours && hours < root.minHours) continue;
+    if (root.id === 'ntg') continue; // nice-to-haves are optional, skip from checklist
+    const items = [];
+    for (const child of (root.children || [])) collectLeaves(child, items);
+    if (items.length > 0) sections.push({ id: root.id, label: root.label, emoji: root.emoji, items });
+  }
+  return sections;
+}
+
+function ChecklistView() {
+  const hours = useContext(DurationCtx);
+  const [checked, setChecked] = useState({});
+  const toggle = key => setChecked(c => ({ ...c, [key]: !c[key] }));
+  const sections = deriveChecklist(hours);
+  const totalItems = sections.reduce((n, s) => n + s.items.length, 0);
+  const doneCount = Object.values(checked).filter(Boolean).length;
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        marginBottom: 16, padding: '10px 16px', background: C.s1,
+        borderRadius: 8, border: `1px solid ${C.border}` }}>
+        <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif",
+          fontSize: 15, color: C.amber }}>Everything Checklist</div>
+        <div style={{ fontSize: 11, color: doneCount === totalItems ? C.sage : C.muted,
+          fontFamily: "'JetBrains Mono',monospace" }}>
+          {doneCount} / {totalItems}
+        </div>
+      </div>
+      {sections.map(sec => (
+        <div key={sec.id} style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8,
+            padding: '7px 12px', background: C.s1,
+            borderRadius: '6px 6px 0 0', border: `1px solid ${C.border}`,
+            borderBottom: 'none' }}>
+            <span style={{ fontSize: 14 }}>{sec.emoji}</span>
+            <span style={{ fontFamily: "'Cormorant Garamond',Georgia,serif",
+              fontSize: 15, fontWeight: 600, color: C.amber }}>{sec.label}</span>
+            <span style={{ marginLeft: 'auto', fontSize: 10, color: C.dim,
+              fontFamily: "'JetBrains Mono',monospace" }}>
+              {sec.items.filter((_, i) => checked[`${sec.id}:${i}`]).length}/{sec.items.length}
+            </span>
+          </div>
+          <div style={{ border: `1px solid ${C.border}`, borderRadius: '0 0 6px 6px',
+            background: C.bg, overflow: 'hidden' }}>
+            {sec.items.map((item, i) => {
+              const key = `${sec.id}:${i}`;
+              const done = !!checked[key];
+              const typeColor = item.type === 'bc' ? C.bc : item.type === 'warn' ? C.warn : null;
+              return (
+                <div key={key} onClick={() => toggle(key)}
+                  style={{ display: 'flex', alignItems: 'flex-start', gap: 10,
+                    padding: '7px 12px', cursor: 'pointer',
+                    borderBottom: `1px solid ${C.border2}`, transition: 'background 0.1s',
+                    opacity: done ? 0.45 : 1 }}
+                  onMouseEnter={e => e.currentTarget.style.background = C.s2}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <div style={{ width: 15, height: 15, flexShrink: 0, marginTop: 2,
+                    border: `1px solid ${done ? C.amber : (typeColor || C.dim)}`,
+                    borderRadius: 3, background: done ? C.amber : 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all 0.15s' }}>
+                    {done && <span style={{ color: C.bg, fontSize: 10, fontWeight: 700 }}>✓</span>}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontSize: 12, color: typeColor || C.text,
+                      fontFamily: "'JetBrains Mono',monospace",
+                      textDecoration: done ? 'line-through' : 'none' }}>
+                      {item.label}
+                    </span>
+                    {item.dietary?.map(d => <DietBadge key={d} d={d} />)}
+                    {item.note && (
+                      <div style={{ fontSize: 10, color: C.dim, marginTop: 1, fontStyle: 'italic' }}>
+                        {item.note}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+//  Old Nice-to-Haves kept for reference (now in tree)
 function NiceToHavesView() {
   const [checked, setChecked] = useState({});
   const toggle = i => setChecked(c => ({ ...c, [i]: !c[i] }));
@@ -890,7 +1009,7 @@ function NiceToHavesView() {
           <span style={{ fontSize: 13, color: checked[i] ? C.dim : C.text,
             fontFamily: "'JetBrains Mono',monospace",
             textDecoration: checked[i] ? 'line-through' : 'none', transition: 'all 0.15s' }}>
-            {i + 1}. {item}
+            {i + 1}. {item.label}
           </span>
         </div>
       ))}
@@ -958,10 +1077,10 @@ export default function App() {
   const liveData = useLiveData();
 
   const TABS = [
-    { id: 'tree',    label: '⧁  Dep Tree' },
-    { id: 'recipes', label: '🍢  Recipes' },
-    { id: 'ntg',     label: '✶  Nice-to-Haves' },
-    { id: 'deps',    label: '⟳  Shared Deps' },
+    { id: 'tree',      label: '⧁  Dep Tree' },
+    { id: 'recipes',   label: '🍢  Recipes' },
+    { id: 'checklist', label: '☑  Checklist' },
+    { id: 'deps',      label: '⟳  Shared Deps' },
   ];
 
   return (
@@ -979,14 +1098,13 @@ export default function App() {
           <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
             Dependency Tree · April Edition · Metro Vancouver · Automobile Access
           </div>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 14 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
             {DIETARY.map(d => (
-              <div key={d.tag} style={{ fontSize: 11, color: d.color,
-                border: `1px solid ${d.color}33`, borderRadius: 5, padding: '5px 11px',
-                background: `${d.color}0e`, maxWidth: 560 }}>
-                <span style={{ fontWeight: 600 }}>⚠ {d.label}: </span>
-                <span style={{ color: C.muted }}>{d.detail}</span>
-              </div>
+              <span key={d.tag} style={{ fontSize: 10, color: d.color,
+                border: `1px solid ${d.color}44`, borderRadius: 4, padding: '2px 8px',
+                background: `${d.color}0e`, fontFamily: "'JetBrains Mono',monospace" }}>
+                ⚠ {d.label}
+              </span>
             ))}
           </div>
         </div>
@@ -1014,10 +1132,10 @@ export default function App() {
 
         {/* Content */}
         <div style={{ padding: '20px 28px 40px', maxWidth: 880, margin: '0 auto' }}>
-          {tab === 'tree'    && <TreeView />}
-          {tab === 'recipes' && <RecipesView />}
-          {tab === 'ntg'     && <NiceToHavesView />}
-          {tab === 'deps'    && <SharedDepsView />}
+          {tab === 'tree'      && <TreeView />}
+          {tab === 'recipes'   && <RecipesView />}
+          {tab === 'checklist' && <ChecklistView />}
+          {tab === 'deps'      && <SharedDepsView />}
         </div>
       </div>
     </LiveDataCtx.Provider>
