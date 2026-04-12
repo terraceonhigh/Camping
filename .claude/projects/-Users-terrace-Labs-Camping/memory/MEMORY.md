@@ -1,0 +1,2 @@
+- [Group Model](group_model.md) — 4-6 mixed experience, comfort-oriented, carpool, delegated via Jira
+- [Monolith for Research](reference_monolith.md) — use `monolith` CLI as web fetcher for Claude's research

@@ -4,33 +4,133 @@ const DurationCtx = createContext(14);
 const LiveDataCtx = createContext(null);
 const SiteCtx     = createContext(null);
 
-function useLiveData(lat, lng) {
-  const [data, setData] = useState({ weather: null, astronomy: null, forecast: null, fireBans: null, loading: true, error: null, lastUpdated: null });
+function useLiveData(lat, lng, bcparksSlug, open511Road) {
+  const [data, setData] = useState({
+    weather: null, forecast: null, sunrise: null, sunset: null,
+    fireBans: null, activeFires: null, aqhi: null,
+    parkStatus: null, parkAdvisories: null, reservationUrl: null,
+    roadEvents: null,
+    loading: true, error: null, lastUpdated: null,
+  });
 
   const fetchAll = useCallback(async () => {
-    const loc = (lat != null && lng != null) ? `${lat},${lng}` : 'Vancouver';
-    try {
-      const [weatherRes, bansRes] = await Promise.allSettled([
-        fetch(`https://wttr.in/${loc}?format=j1`).then(r => r.json()),
-        fetch('/api/bc-fire-bans').then(r => r.json()),
-      ]);
+    const hasCoords = lat != null && lng != null;
+    const coordLat  = hasCoords ? lat  : 49.2827;
+    const coordLng  = hasCoords ? lng  : -123.1207;
 
-      const w = weatherRes.status === 'fulfilled' ? weatherRes.value : null;
-      const bans = bansRes.status === 'fulfilled' ? bansRes.value : null;
+    const queries = [
+      // Open-Meteo: current + 3-day hourly forecast
+      fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${coordLat}&longitude=${coordLng}` +
+        `&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,relative_humidity_2m` +
+        `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max` +
+        `&hourly=precipitation_probability&timezone=America%2FVancouver&forecast_days=3`
+      ).then(r => r.json()),
 
-      setData({
-        weather: w?.current_condition?.[0] || null,
-        astronomy: w?.weather?.[0]?.astronomy?.[0] || null,
-        forecast: w?.weather || null,
-        fireBans: bans?.features || null,
-        loading: false,
-        error: null,
-        lastUpdated: new Date(),
-      });
-    } catch (e) {
-      setData(prev => ({ ...prev, loading: false, error: e.message }));
-    }
-  }, [lat, lng]);
+      // Sunrise-Sunset API
+      fetch(
+        `https://api.sunrise-sunset.org/json?lat=${coordLat}&lng=${coordLng}&formatted=0`
+      ).then(r => r.json()),
+
+      // BCWS ArcGIS — active bans (layer 14), point-in-polygon bbox
+      fetch(
+        `https://services6.arcgis.com/ubm4tcTYICKBpist/arcgis/rest/services/BCWS_ActiveFires_PublicView/FeatureServer/14/query` +
+        `?where=1%3D1&geometry=${coordLng-0.5}%2C${coordLat-0.5}%2C${coordLng+0.5}%2C${coordLat+0.5}` +
+        `&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=FIRE_STATUS_CODE%2CFIRE_ZONE_CODE&f=json`
+      ).then(r => r.json()),
+
+      // BCWS ArcGIS — active fires nearby (layer 0)
+      fetch(
+        `https://services6.arcgis.com/ubm4tcTYICKBpist/arcgis/rest/services/BCWS_ActiveFires_PublicView/FeatureServer/0/query` +
+        `?where=1%3D1&geometry=${coordLng-1}%2C${coordLat-1}%2C${coordLng+1}%2C${coordLat+1}` +
+        `&geometryType=esriGeometryEnvelope&spatialRel=esriSpatialRelIntersects&outFields=FIRE_NAME%2CFIRE_STATUS&returnCountOnly=true&f=json`
+      ).then(r => r.json()),
+
+      // MSC GeoMet AQHI — nearest station
+      fetch(
+        `https://geomet.weather.gc.ca/api/collections/aqhi-observations-realtime/items` +
+        `?bbox=${coordLng-1}%2C${coordLat-1}%2C${coordLng+1}%2C${coordLat+1}&limit=1&f=json`
+      ).then(r => r.json()),
+
+      // BC Parks GraphQL (only if slug provided)
+      bcparksSlug
+        ? fetch('https://bcparks.api.gov.bc.ca/graphql', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: `{
+              protectedArea(slug: "${bcparksSlug}") {
+                hasCampfireBan parkContact status
+                advisories { title description urgency }
+                reservations { reservationUrl }
+              }
+            }` }),
+          }).then(r => r.json())
+        : Promise.resolve(null),
+
+      // DriveBC Open511 (only if road name provided)
+      open511Road
+        ? fetch(`/api/drivebc/events?road_name=${encodeURIComponent(open511Road)}&status=ACTIVE&format=json`)
+            .then(r => r.json())
+        : Promise.resolve(null),
+    ];
+
+    const results = await Promise.allSettled(queries);
+    const [meteoRes, astroRes, bansRes, firesRes, aqhiRes, parksRes, drivebcRes] = results;
+
+    const meteo   = meteoRes.status   === 'fulfilled' ? meteoRes.value   : null;
+    const astro   = astroRes.status   === 'fulfilled' ? astroRes.value   : null;
+    const bans    = bansRes.status    === 'fulfilled' ? bansRes.value    : null;
+    const fires   = firesRes.status   === 'fulfilled' ? firesRes.value   : null;
+    const aqhi    = aqhiRes.status    === 'fulfilled' ? aqhiRes.value    : null;
+    const parks   = parksRes.status   === 'fulfilled' ? parksRes.value   : null;
+    const drivebc = drivebcRes.status === 'fulfilled' ? drivebcRes.value : null;
+
+    const cur = meteo?.current;
+    const daily = meteo?.daily;
+
+    // Sunrise / sunset from api.sunrise-sunset.org (UTC ISO strings)
+    const sunriseISO = astro?.results?.civil_twilight_begin;
+    const sunsetISO  = astro?.results?.sunset;
+
+    // AQHI value
+    const aqhiVal = aqhi?.features?.[0]?.properties?.aqhi ?? null;
+
+    // Park data
+    const park = parks?.data?.protectedArea || null;
+
+    // Road events
+    const roadEvents = drivebc?.events || null;
+
+    setData({
+      weather: cur ? {
+        tempC:        Math.round(cur.temperature_2m),
+        feelsC:       Math.round(cur.apparent_temperature),
+        code:         cur.weather_code,
+        windKmh:      Math.round(cur.wind_speed_10m),
+        windDir:      cur.wind_direction_10m,
+        humidity:     cur.relative_humidity_2m,
+      } : null,
+      forecast: daily ? {
+        codes:    daily.weather_code,
+        maxTemps: daily.temperature_2m_max,
+        minTemps: daily.temperature_2m_min,
+        popMax:   daily.precipitation_probability_max,
+        windMax:  daily.wind_speed_10m_max,
+        times:    daily.time,
+      } : null,
+      sunrise: sunriseISO ? fmtTime(sunriseISO) : null,
+      sunset:  sunsetISO  ? fmtTime(sunsetISO)  : null,
+      fireBans: bans?.features ?? null,
+      activeFires: fires?.count ?? null,
+      aqhi: aqhiVal,
+      parkStatus:     park?.status ?? null,
+      parkAdvisories: park?.advisories ?? null,
+      hasCampfireBan: park?.hasCampfireBan ?? null,
+      reservationUrl: park?.reservations?.[0]?.reservationUrl ?? null,
+      roadEvents: roadEvents,
+      loading: false, error: null, lastUpdated: new Date(),
+    });
+  }, [lat, lng, bcparksSlug, open511Road]);
 
   useEffect(() => {
     fetchAll();
@@ -43,56 +143,95 @@ function useLiveData(lat, lng) {
 
 function LiveStatusBar() {
   const live = useContext(LiveDataCtx);
+  const { site } = useContext(SiteCtx) || {};
+
   if (!live || live.loading) return (
     <div style={{ padding: '8px 28px', background: C.s1, borderBottom: `1px solid ${C.border}`,
       fontSize: 11, color: C.dim, fontFamily: "'JetBrains Mono',monospace" }}>
-      Loading live data...
+      Loading live data…
     </div>
   );
   if (live.error) return null;
 
-  const w = live.weather;
-  const astro = live.astronomy;
-  const bans = live.fireBans;
+  const w     = live.weather;
+  const bans  = live.fireBans;
   const hasBans = bans && bans.length > 0;
 
+  const rowStyle = {
+    display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'center',
+    fontFamily: "'JetBrains Mono',monospace", fontSize: 11,
+  };
+  const sep = { borderLeft: `1px solid ${C.border}`, paddingLeft: 14 };
+
   return (
-    <div style={{ padding: '10px 28px', background: C.s1, borderBottom: `1px solid ${C.border}`,
-      display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center',
-      fontFamily: "'JetBrains Mono',monospace", fontSize: 11 }}>
+    <div style={{ background: C.s1, borderBottom: `1px solid ${C.border}`, padding: '8px 28px', display: 'flex', flexDirection: 'column', gap: 6 }}>
 
-      {w && (
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <span style={{ color: C.text }}>{w.temp_C}°C</span>
-          <span style={{ color: C.muted }}>feels {w.FeelsLikeC}°C</span>
-          <span style={{ color: C.muted }}>{w.weatherDesc?.[0]?.value}</span>
-          <span style={{ color: C.muted }}>wind {w.windspeedKmph} km/h {w.winddir16Point}</span>
-          <span style={{ color: C.muted }}>humidity {w.humidity}%</span>
+      {/* Row 1: weather · fire bans · AQHI · sunrise/sunset */}
+      <div style={rowStyle}>
+        {w && (
+          <div style={{ display: 'flex', gap: 10 }}>
+            <span style={{ color: C.text, fontWeight: 500 }}>{w.tempC}°C</span>
+            <span style={{ color: C.muted }}>feels {w.feelsC}°C</span>
+            <span style={{ color: C.muted }}>{WMO_CODES[w.code] ?? `WMO ${w.code}`}</span>
+            <span style={{ color: C.muted }}>wind {w.windKmh} km/h</span>
+            <span style={{ color: C.muted }}>humidity {w.humidity}%</span>
+          </div>
+        )}
+
+        <div style={sep}>
+          {live.hasCampfireBan ? (
+            <span style={{ color: C.warn, fontWeight: 600 }}>⚠ campfire ban in effect</span>
+          ) : hasBans ? (
+            <span style={{ color: C.warn, fontWeight: 600 }}>⚠ {bans.length} fire ban{bans.length !== 1 ? 's' : ''} nearby</span>
+          ) : (
+            <span style={{ color: C.sage }}>✓ No fire bans</span>
+          )}
+          {live.activeFires != null && live.activeFires > 0 && (
+            <span style={{ color: C.warn, marginLeft: 10 }}>🔥 {live.activeFires} active fire{live.activeFires !== 1 ? 's' : ''} within 100 km</span>
+          )}
         </div>
-      )}
 
-      {astro && (
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center',
-          borderLeft: `1px solid ${C.border}`, paddingLeft: 16 }}>
-          <span style={{ color: C.amber }}>sunrise {astro.sunrise}</span>
-          <span style={{ color: C.dim }}>sunset {astro.sunset}</span>
-        </div>
-      )}
+        {live.aqhi != null && (
+          <div style={sep}>
+            <span style={{ color: live.aqhi <= 3 ? C.sage : live.aqhi <= 6 ? C.gold : C.warn }}>
+              AQHI {live.aqhi}
+            </span>
+          </div>
+        )}
 
-      <div style={{ borderLeft: `1px solid ${C.border}`, paddingLeft: 16 }}>
-        {hasBans ? (
-          <span style={{ color: C.warn, fontWeight: 600 }}>
-            ⚠ {bans.length} active fire ban{bans.length !== 1 ? 's' : ''}
+        {(live.sunrise || live.sunset) && (
+          <div style={{ ...sep, display: 'flex', gap: 10 }}>
+            {live.sunrise && <span style={{ color: C.amber }}>↑ {live.sunrise}</span>}
+            {live.sunset  && <span style={{ color: C.dim }}>↓ {live.sunset}</span>}
+          </div>
+        )}
+
+        {live.lastUpdated && (
+          <span style={{ color: C.dim, marginLeft: 'auto', fontSize: 10 }}>
+            {live.lastUpdated.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' })}
           </span>
-        ) : (
-          <span style={{ color: C.sage }}>✓ No active fire bans</span>
         )}
       </div>
 
-      {live.lastUpdated && (
-        <span style={{ color: C.dim, marginLeft: 'auto', fontSize: 10 }}>
-          updated {live.lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </span>
+      {/* Row 2: park status + road events (only when site selected) */}
+      {site && (live.parkStatus || live.parkAdvisories?.length || live.roadEvents?.length > 0) && (
+        <div style={{ ...rowStyle, paddingTop: 4, borderTop: `1px solid ${C.border2}` }}>
+          {live.parkStatus && (
+            <span style={{ color: live.parkStatus === 'Open' ? C.sage : C.warn }}>
+              {live.parkStatus === 'Open' ? '✓' : '⚠'} Park: {live.parkStatus}
+            </span>
+          )}
+          {live.parkAdvisories?.map((a, i) => (
+            <span key={i} style={{ color: a.urgency === 'High' ? C.warn : C.gold }}>
+              ⚑ {a.title}
+            </span>
+          ))}
+          {live.roadEvents?.length > 0 && (
+            <span style={{ color: C.warn }}>
+              ⚠ {live.roadEvents.length} road event{live.roadEvents.length !== 1 ? 's' : ''} on {site.open511Road}
+            </span>
+          )}
+        </div>
       )}
     </div>
   );
@@ -104,6 +243,23 @@ const C = {
   gold:   '#c8a44a', sage: '#7aaa7c', warn: '#e8b840', bc: '#68a8ca',
   border: '#38301e', border2: '#272012',
 };
+
+const WMO_CODES = {
+  0:'Clear sky', 1:'Mainly clear', 2:'Partly cloudy', 3:'Overcast',
+  45:'Fog', 48:'Icy fog',
+  51:'Light drizzle', 53:'Drizzle', 55:'Heavy drizzle',
+  61:'Light rain', 63:'Rain', 65:'Heavy rain',
+  71:'Light snow', 73:'Snow', 75:'Heavy snow',
+  77:'Snow grains',
+  80:'Light showers', 81:'Showers', 82:'Heavy showers',
+  85:'Light snow showers', 86:'Snow showers',
+  95:'Thunderstorm', 96:'Thunderstorm w/ hail', 99:'Thunderstorm w/ heavy hail',
+};
+
+function fmtTime(isoOrDate) {
+  const d = typeof isoOrDate === 'string' ? new Date(isoOrDate) : isoOrDate;
+  return d.toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Vancouver' });
+}
 
 const TAG_META = {
   gf:          { label: 'GF',    bg: '#c8a44a22', color: '#c8a44a' },
@@ -159,7 +315,9 @@ const SITES = [
     driveTimeMin: 50,
     highway: 'Hwy 99 (Sea-to-Sky)',
     driveBC: '99',
+    open511Road: 'Highway 99',
     bcparks: 'https://bcparks.ca/porteau-cove-provincial-park/',
+    bcparksSlug: 'porteau-cove-park',
     discoverCamping: 'https://camping.bcparks.ca/',
     fireAllowed: true,
     cell: 'good',
@@ -173,7 +331,9 @@ const SITES = [
     driveTimeMin: 70,
     highway: 'Hwy 7 (Lougheed)',
     driveBC: '7',
+    open511Road: 'Highway 7',
     bcparks: 'https://bcparks.ca/golden-ears-provincial-park/',
+    bcparksSlug: 'golden-ears-park',
     discoverCamping: 'https://camping.bcparks.ca/',
     fireAllowed: true,
     cell: 'spotty',
@@ -187,7 +347,9 @@ const SITES = [
     driveTimeMin: 65,
     highway: 'Hwy 99 (Sea-to-Sky)',
     driveBC: '99',
+    open511Road: 'Highway 99',
     bcparks: 'https://bcparks.ca/alice-lake-provincial-park/',
+    bcparksSlug: 'alice-lake-park',
     discoverCamping: 'https://camping.bcparks.ca/',
     fireAllowed: true,
     cell: 'moderate',
@@ -201,7 +363,9 @@ const SITES = [
     driveTimeMin: 35,
     highway: 'Barnet Hwy',
     driveBC: null,
+    open511Road: null,
     bcparks: null,
+    bcparksSlug: null,
     discoverCamping: null,
     parkUrl: 'https://www.portmoody.ca/en/parks-recreation-culture/parks/rocky-point-park.aspx',
     fireAllowed: false,
@@ -216,7 +380,9 @@ const SITES = [
     driveTimeMin: 40,
     highway: 'Ioco Rd (Belcarra)',
     driveBC: null,
+    open511Road: null,
     bcparks: null,
+    bcparksSlug: null,
     discoverCamping: null,
     parkUrl: 'https://metrovancouver.org/parks-outdoors/parks/belcarra-regional-park',
     fireAllowed: false,
@@ -294,11 +460,11 @@ const TREE = [
   { id: 'fire', label: 'The Fire', emoji: '🔥', minHours: 0,
     desc: 'Central dep — anchors Meal, Night, Sunrise, Music', children: [
     { label: 'BC Regulatory', type: 'bc', children: [
-      { label: 'Fire ban status', note: 'Category 1 in designated rings. Bans activate <24hrs notice.', type: 'bc', dep: 'Pre-Flight → Fire & Env.', kind: 'check' },
+      { label: 'Fire ban status', note: 'Category 1 in designated rings. Bans activate <24hrs notice.', type: 'bc', dep: 'Pre-Flight → Fire & Env.', kind: 'do' },
       { label: 'Campfire permit', note: 'Provincial Parks: fee covers it. FLNRORD: free permit at bcwildfire.ca. Backcountry: always required.', type: 'bc', kind: 'check' },
-      { label: 'Firewood transport rule (10 km)', note: 'BC Wildfire Act. Do not bring wood from Vancouver. Buy at or within 10km of site.', type: 'warn', kind: 'check' },
-      { label: 'Fire ring rule', note: 'Designated metal ring only. No ground fires, no moved rocks.', kind: 'check' },
-      { label: 'Extinguishing requirement', note: 'Cold to touch — drown, stir, check with bare hand.', kind: 'check' },
+      { label: 'Firewood transport rule (10 km)', note: 'BC Wildfire Act. Do not bring wood from Vancouver. Buy at or within 10km of site.', type: 'warn', kind: 'do' },
+      { label: 'Fire ring rule', note: 'Designated metal ring only. No ground fires, no moved rocks.', kind: 'do' },
+      { label: 'Extinguishing requirement', note: 'Cold to touch — drown, stir, check with bare hand.', kind: 'do' },
     ]},
     { label: 'Fuel', children: [
       { label: 'Firewood', note: '2–3 bundles min (14-hr arc). Hardwood preferred. Reserve 1 bundle for 4:30 AM rebuild.', kind: 'get' },
@@ -317,13 +483,13 @@ const TREE = [
       { label: 'Transition to log cabin / parallel log for sustained coals' },
     ]},
     { label: 'Wind Management', children: [
-      { label: 'April: 10–20 km/h; higher at Porteau Cove', kind: 'check' },
-      { label: 'Body windbreak or tarp baffle during lighting', kind: 'check' },
-      { label: 'Abandon attempt if sustained >30 km/h', type: 'warn', kind: 'check' },
+      { label: 'April: 10–20 km/h; higher at Porteau Cove', kind: 'do' },
+      { label: 'Body windbreak or tarp baffle during lighting', kind: 'do' },
+      { label: 'Abandon attempt if sustained >30 km/h', type: 'warn', kind: 'do' },
     ]},
     { label: 'Damp Conditions Mitigation', children: [
       { label: 'Dry bark platform under tinder', kind: 'get' },
-      { label: 'Clear standing water from ring before building', kind: 'check' },
+      { label: 'Clear standing water from ring before building', kind: 'do' },
       { label: 'Spare tinder in dry bag until needed', kind: 'get' },
     ]},
     { label: 'Tending Equipment', children: [
@@ -335,9 +501,9 @@ const TREE = [
     { label: 'Safety Equipment', children: [
       { label: 'Water bucket or large pot', note: 'Min 8L. Fill on arrival.', type: 'warn', kind: 'get' },
       { label: 'Small folding shovel', kind: 'get' },
-      { label: '1m clear radius around fire ring', kind: 'check' },
-      { label: 'Identify nearest water source on arrival', kind: 'check' },
-      { label: 'Brief group on extinguishing before first light', kind: 'check' },
+      { label: '1m clear radius around fire ring', kind: 'do' },
+      { label: 'Identify nearest water source on arrival', kind: 'do' },
+      { label: 'Brief group on extinguishing before first light', kind: 'do' },
     ]},
   ]},
   { id: 'meal', label: 'The Meal', emoji: '🍢', minHours: 0,
@@ -413,13 +579,13 @@ const TREE = [
     ]},
     { label: 'Shelter', children: [
       { label: 'Car Camping', note: 'Warmest, driest. 1–2 car spots available (carpool).', children: [
-        { label: 'Fold rear seats flat, remove headrests', note: 'Test the setup at home. Fill seat-to-cargo gaps with rolled towels.', kind: 'check' },
+        { label: 'Fold rear seats flat, remove headrests', note: 'Test the setup at home. Fill seat-to-cargo gaps with rolled towels.', kind: 'do' },
         { label: 'Self-inflating pad (2"+ thick) on folded seats', note: 'Simpler than car-specific air mattress. R-value 2.0+.', kind: 'get' },
         { label: 'Window covers (Reflectix or pop-up shades)', note: 'Privacy + insulation. Trace windows with newspaper, cut to shape.', kind: 'get' },
         { label: 'Crack windows 1–2" on opposite sides', note: 'Cross-ventilation for condensation. Each person exhales ~1L moisture/night.', type: 'know' },
         { label: 'Rain guards / wind deflectors', note: '~$30/set, stick-on. Allow cracked windows in rain. #1 car-sleep accessory.', kind: 'get' },
         { label: 'Park with head-end slightly uphill', note: 'Use phone level app — if >3° slope, add foam wedge under foot end.', type: 'know' },
-        { label: 'NEVER run engine while sleeping', note: 'CO is colourless, odourless, lethal. Exhaust pools under vehicle and seeps through cracked windows.', type: 'warn', kind: 'check' },
+        { label: 'NEVER run engine while sleeping', note: 'CO is colourless, odourless, lethal. Exhaust pools under vehicle and seeps through cracked windows.', type: 'warn', kind: 'do' },
       ]},
       { label: 'Tent', note: '2–4 person, double-wall with rain fly.', children: [
         { label: 'Footprint / groundsheet under tent', note: 'Must be slightly smaller than tent floor to avoid rain pooling between layers.', kind: 'get' },
@@ -451,11 +617,11 @@ const TREE = [
       { label: 'Morning re-light from scratch', note: 'Keep dry kindling + newspaper in sealed bag overnight. Do not attempt overnight maintenance.', dep: 'The Fire → Ignition' },
     ]},
     { label: 'Wildlife Protocol', type: 'warn', children: [
-      { label: 'Black bears active in April', note: 'Males emerge March–April, hungry and food-motivated. Assume bears are active at any Metro Van campground.', type: 'warn', kind: 'check' },
-      { label: 'Raccoons — the more likely nuisance', note: 'Bold at established campgrounds. Will open cooler latches and unzip tent vestibules.', kind: 'check' },
-      { label: 'Food lockup: all food + scented items in locked vehicle', note: 'Includes toothpaste, sunscreen, deodorant. "Bare Campsite" rule: nothing out when sleeping.', type: 'bc', dep: 'The Meal → Cold Chain', kind: 'check' },
-      { label: 'Do NOT hang food at frontcountry campgrounds', note: 'Counterintuitive but official BC Parks policy — hanging attracts wildlife to the campground.', type: 'bc', kind: 'check' },
-      { label: 'Trash in bear-proof bins or locked vehicle', note: 'Never at the site overnight.', kind: 'check' },
+      { label: 'Black bears active in April', note: 'Males emerge March–April, hungry and food-motivated. Assume bears are active at any Metro Van campground.', type: 'warn', kind: 'do' },
+      { label: 'Raccoons — the more likely nuisance', note: 'Bold at established campgrounds. Will open cooler latches and unzip tent vestibules.', kind: 'do' },
+      { label: 'Food lockup: all food + scented items in locked vehicle', note: 'Includes toothpaste, sunscreen, deodorant. "Bare Campsite" rule: nothing out when sleeping.', type: 'bc', dep: 'The Meal → Cold Chain', kind: 'do' },
+      { label: 'Do NOT hang food at frontcountry campgrounds', note: 'Counterintuitive but official BC Parks policy — hanging attracts wildlife to the campground.', type: 'bc', kind: 'do' },
+      { label: 'Trash in bear-proof bins or locked vehicle', note: 'Never at the site overnight.', kind: 'do' },
     ]},
     { label: 'Comfort Kit (per person)', note: 'The gap between "never again" and "when\'s the next one."', children: [
       { label: 'Headlamp with red-light mode', note: 'One per person. Red mode preserves night vision. Clip to tent loop, not buried in bag.', dep: 'Shared Dep', kind: 'get' },
@@ -465,20 +631,20 @@ const TREE = [
       { label: 'Camp towel (small)', note: 'Wipe condensation from car windows or tent walls in the morning.', kind: 'get' },
     ]},
     { label: 'Quiet Hours & Etiquette', type: 'bc', children: [
-      { label: 'BC Parks quiet hours: 11 PM – 7 AM', note: 'Some parks differ (e.g., Alice Lake 10 PM). Check specific park page.', type: 'bc', kind: 'check' },
-      { label: 'Speaker off or whisper volume at quiet hours', note: 'Sound carries extremely well over water and between sites. #1 campground complaint.', kind: 'check' },
-      { label: 'Campfires out before sleeping', note: 'Enforced. Fines apply.', type: 'warn', dep: 'The Night → Fire Schedule', kind: 'check' },
-      { label: 'Alcohol: legal only at registered campsite', note: 'No open alcohol in common areas.', type: 'bc', kind: 'check' },
+      { label: 'BC Parks quiet hours: 11 PM – 7 AM', note: 'Some parks differ (e.g., Alice Lake 10 PM). Check specific park page.', type: 'bc', kind: 'do' },
+      { label: 'Speaker off or whisper volume at quiet hours', note: 'Sound carries extremely well over water and between sites. #1 campground complaint.', kind: 'do' },
+      { label: 'Campfires out before sleeping', note: 'Enforced. Fines apply.', type: 'warn', dep: 'The Night → Fire Schedule', kind: 'do' },
+      { label: 'Alcohol: legal only at registered campsite', note: 'No open alcohol in common areas.', type: 'bc', kind: 'do' },
     ]},
     { label: 'Safety Protocol', children: [
-      { label: 'CO warning: never run engine or use propane inside car/tent', note: 'Colourless, odourless, lethal. Not even "just for heat." Battery CO detector ~$25 if anyone sleeps in car.', type: 'warn', kind: 'check' },
+      { label: 'CO warning: never run engine or use propane inside car/tent', note: 'Colourless, odourless, lethal. Not even "just for heat." Battery CO detector ~$25 if anyone sleeps in car.', type: 'warn', kind: 'do' },
       { label: 'Mark tent guylines with reflective cord or glow sticks', note: 'If tent is near foot traffic path.', kind: 'get' },
-      { label: 'Clear bathroom path before dark', note: 'Walk the route once by headlamp. Designate a direction for overnight bathroom trips.', kind: 'check' },
-      { label: 'Head count before lights-out', kind: 'check' },
+      { label: 'Clear bathroom path before dark', note: 'Walk the route once by headlamp. Designate a direction for overnight bathroom trips.', kind: 'do' },
+      { label: 'Head count before lights-out', kind: 'do' },
       { label: 'Nobody walks alone beyond campsite perimeter', note: 'Within campsite solo is fine. Trail walks: pairs.', type: 'know' },
       { label: 'First aid kit', note: 'Bandages, antiseptic, blister pads, ibuprofen, antihistamine, tweezers.', kind: 'get' },
       { label: 'Nearest hospital saved offline', note: 'Cell coverage variable — Porteau Cove: good; Golden Ears interior: spotty.', kind: 'check' },
-      { label: 'Set up camp fully BEFORE dark', note: 'Tents, sleeping gear, food storage, fire prep. All done in daylight. Non-negotiable for mixed-experience groups.', type: 'warn', kind: 'check' },
+      { label: 'Set up camp fully BEFORE dark', note: 'Tents, sleeping gear, food storage, fire prep. All done in daylight. Non-negotiable for mixed-experience groups.', type: 'warn', kind: 'do' },
     ]},
   ]},
   { id: 'sunrise', label: 'The Sunrise', emoji: '🌅', minHours: 14,
@@ -486,10 +652,10 @@ const TREE = [
     { label: 'Timing', children: [
       { label: 'Alarm: 60–75 min before sunrise', note: 'Late April sunrise ~5:50–6:10 AM. Early April ~6:30–6:50 AM. Adjust to actual trip date.', liveKey: 'sunrise', kind: 'check' },
       { label: 'Civil twilight starts 30–35 min before sunrise', note: 'Sky starts colouring then. Best colour is 10–15 min before sun crests.', type: 'know' },
-      { label: 'Be in position during civil twilight', note: 'Not after sunrise — the best light happens before.', kind: 'check' },
+      { label: 'Be in position during civil twilight', note: 'Not after sunrise — the best light happens before.', kind: 'do' },
     ]},
     { label: 'Viewing Location', children: [
-      { label: 'Pre-scout east-facing vantage the evening before', note: 'None of the candidate sites have classic ocean-sunrise views.', dep: 'Site Selection', kind: 'check' },
+      { label: 'Pre-scout east-facing vantage the evening before', note: 'None of the candidate sites have classic ocean-sunrise views.', dep: 'Site Selection', kind: 'do' },
       { label: 'Porteau Cove: west-facing campsites', note: 'Sunrise is behind you, over mountains. But alpenglow on Howe Sound + Anvil Island is spectacular. Pier is best vantage.', type: 'know' },
       { label: 'Golden Ears / Alice Lake: forested, enclosed', note: 'Walk to lakeshore for open sky. Sunrise light filters through trees — pleasant but not dramatic.' },
       { label: 'Sasamat Lake: NE shore, faces SW', note: 'Calm lake catches early light. Peaceful, not dramatic.' },
@@ -502,15 +668,15 @@ const TREE = [
       { label: 'No talking at camp — whisper only. Regroup at viewing spot.' },
     ]},
     { label: 'Coffee at the viewpoint', children: [
-      { label: 'Thermos pre-filled the night before', note: 'No stove, no kettle, no boiling water at 4:30 AM. Silence is part of the experience.', dep: 'The Meal → Drinks', kind: 'check' },
-      { label: 'Bring a camp chair or blanket to wrap in', dep: 'The Night → Comfort Kit', kind: 'check' },
+      { label: 'Thermos pre-filled the night before', note: 'No stove, no kettle, no boiling water at 4:30 AM. Silence is part of the experience.', dep: 'The Meal → Drinks', kind: 'do' },
+      { label: 'Bring a camp chair or blanket to wrap in', dep: 'The Night → Comfort Kit', kind: 'do' },
     ]},
-    { label: 'Full layering on', dep: 'The Night → Layering', kind: 'check' },
+    { label: 'Full layering on', dep: 'The Night → Layering', kind: 'do' },
     { label: 'Dawn Chorus', type: 'know', children: [
       { label: 'Birds begin 30–60 min before sunrise', note: 'April Vancouver: robins and thrushes from ~4–5 AM, full chorus by 5:00–5:30 AM.' },
       { label: 'This IS the soundtrack', note: 'No music, no talking. Let it happen.' },
     ]},
-    { label: 'Pre-dawn fire rebuild (optional)', note: 'Loud — crackling, blowing on coals. Only if the viewing spot is at the fire pit, not near tents.', dep: 'The Fire', kind: 'check' },
+    { label: 'Pre-dawn fire rebuild (optional)', note: 'Loud — crackling, blowing on coals. Only if the viewing spot is at the fire pit, not near tents.', dep: 'The Fire', kind: 'do' },
     { label: 'Photography', type: 'know', children: [
       { label: 'Clean phone lens (overnight condensation)' },
       { label: 'Lock exposure on brightest sky — let foreground silhouette', note: 'Silhouettes of friends holding coffee, the fire’s last embers with dawn sky behind.' },
@@ -525,11 +691,11 @@ const TREE = [
       { label: 'Clip-on tuner (Snark or similar)', note: 'Cold makes strings go flat unpredictably. Retune between songs.', kind: 'get' },
       { label: 'Let guitar acclimate 30 min in closed case', note: 'Prevents finish checking from rapid temp change.', type: 'know' },
       { label: 'Case stays closed when not playing', note: 'Damp can swell the top. One night won’t cause permanent damage, but don’t leave it out.' },
-      { label: 'If rain threatens: guitar in case immediately', note: 'A garbage bag over the case is a reasonable backup.', kind: 'check' },
+      { label: 'If rain threatens: guitar in case immediately', note: 'A garbage bag over the case is a reasonable backup.', kind: 'do' },
     ]},
     { label: 'Bluetooth speaker', children: [
       { label: 'IPX7-rated (waterproof)', note: 'JBL Flip series or Anker Soundcore. Survives rain and spills.', kind: 'get' },
-      { label: 'Battery: 8–10 usable hours in April cold', note: 'Cold (<5°C) cuts battery 20–30%. Plan at 30–40% volume.', kind: 'check' },
+      { label: 'Battery: 8–10 usable hours in April cold', note: 'Cold (<5°C) cuts battery 20–30%. Plan at 30–40% volume.', kind: 'do' },
       { label: 'Power bank as backup charger', dep: 'Shared Dep', kind: 'get' },
       { label: 'Strategy: guitar for singalongs, speaker for ambient', note: 'Extends both guitar player stamina and battery life.', type: 'know' },
     ]},
@@ -559,9 +725,9 @@ const TREE = [
       { label: 'Invent your own constellations', note: 'Name them after people in the group. Low-effort, high-memory-making.', type: 'know' },
     ]},
     { label: 'Practical', children: [
-      { label: 'Headlamp on red mode for game lighting', dep: 'Shared Dep', kind: 'check' },
+      { label: 'Headlamp on red mode for game lighting', dep: 'Shared Dep', kind: 'do' },
       { label: 'LED lantern on low at centre of game circle', note: 'Firelight alone is enough for Uno but not standard playing cards.', kind: 'get' },
-      { label: 'Flat surface: cooler lid, cutting board, or camp chair tray', note: 'Cards on the ground = lost cards.', kind: 'check' },
+      { label: 'Flat surface: cooler lid, cutting board, or camp chair tray', note: 'Cards on the ground = lost cards.', kind: 'do' },
       { label: 'If windy: pivot to verbal games', note: 'Have the backup plan ready. Wind is the enemy of card games.', type: 'know' },
     ]},
     { label: 'Sage bundle', note: 'Toss into fire — mosquito deterrent, smells excellent', kind: 'get' },
@@ -576,24 +742,24 @@ const TREE = [
       { label: 'Dutch Pannekoek Haus, Chilliwack', note: 'Opens 8:00 AM. 2+ hrs from all candidate sites — only if heading east after.', dietary: ['celiac'], type: 'warn', kind: 'check' },
     ]},
     { label: 'Camp Breakdown', children: [
-      { label: 'Extinguish fire completely', note: 'Drown, stir, drown, feel with back of hand. If warm, repeat.', dep: 'The Fire → Safety', kind: 'check' },
-      { label: 'Full-site trash sweep', note: 'Grid-walk the campsite. Micro-trash (bottle caps, foil bits, twist ties) is most commonly missed.', kind: 'check' },
-      { label: 'Pack out ALL waste', note: 'Including food scraps, fruit peels, eggshells. Double-bag wet trash.', kind: 'check' },
-      { label: 'Greywater: strain solids, scatter water 200ft from water source', note: 'Pack out the strained food particles.', type: 'bc', kind: 'check' },
-      { label: 'Restore site to natural state', note: 'Replace moved rocks/logs. Fluff matted grass. Scatter leaves/needles over bare spots.', kind: 'check' },
-      { label: 'Check bear cache / food locker emptied', dep: 'The Night → Wildlife', kind: 'check' },
-      { label: 'Final walk-through before departure', kind: 'check' },
+      { label: 'Extinguish fire completely', note: 'Drown, stir, drown, feel with back of hand. If warm, repeat.', dep: 'The Fire → Safety', kind: 'do' },
+      { label: 'Full-site trash sweep', note: 'Grid-walk the campsite. Micro-trash (bottle caps, foil bits, twist ties) is most commonly missed.', kind: 'do' },
+      { label: 'Pack out ALL waste', note: 'Including food scraps, fruit peels, eggshells. Double-bag wet trash.', kind: 'do' },
+      { label: 'Greywater: strain solids, scatter water 200ft from water source', note: 'Pack out the strained food particles.', type: 'bc', kind: 'do' },
+      { label: 'Restore site to natural state', note: 'Replace moved rocks/logs. Fluff matted grass. Scatter leaves/needles over bare spots.', kind: 'do' },
+      { label: 'Check bear cache / food locker emptied', dep: 'The Night → Wildlife', kind: 'do' },
+      { label: 'Final walk-through before departure', kind: 'do' },
     ]},
     { label: 'Post-Trip Gear Care', note: 'Do same-day — mildew starts within 24–48 hours.', children: [
-      { label: 'Tent: set up at home to dry before storing', note: 'Storing wet = mildew = ruined tent.', kind: 'check' },
-      { label: 'Sleeping bags: hang or drape, never stuff wet', kind: 'check' },
-      { label: 'Tarps: hang to dry', kind: 'check' },
-      { label: 'Cooler: drain at site, wash with baking soda at home', note: 'If fish/meat stored: dilute bleach wash, rinse thoroughly.', kind: 'check' },
-      { label: 'Car: tarp/garbage bags in trunk before loading wet gear', kind: 'check' },
+      { label: 'Tent: set up at home to dry before storing', note: 'Storing wet = mildew = ruined tent.', kind: 'do' },
+      { label: 'Sleeping bags: hang or drape, never stuff wet', kind: 'do' },
+      { label: 'Tarps: hang to dry', kind: 'do' },
+      { label: 'Cooler: drain at site, wash with baking soda at home', note: 'If fish/meat stored: dilute bleach wash, rinse thoroughly.', kind: 'do' },
+      { label: 'Car: tarp/garbage bags in trunk before loading wet gear', kind: 'do' },
     ]},
     { label: 'Trip Memory', children: [
-      { label: 'Shared photo album (Google Photos or Apple Shared)', note: 'Create before the trip, share link in group chat. Everyone uploads.', kind: 'check' },
-      { label: 'Group photo before breaking camp', note: 'Easiest to forget in the departure rush.', kind: 'check' },
+      { label: 'Shared photo album (Google Photos or Apple Shared)', note: 'Create before the trip, share link in group chat. Everyone uploads.', kind: 'do' },
+      { label: 'Group photo before breaking camp', note: 'Easiest to forget in the departure rush.', kind: 'do' },
     ]},
   ]},
   { id: 'ntg', label: 'Nice-to-Haves', emoji: '✶', minHours: 0,
@@ -801,41 +967,48 @@ function DurationSlider({ hours, setHours }) {
 
 function resolveLive(liveKey, live) {
   if (!live || live.loading || !liveKey) return null;
-  const w = live.weather;
-  const astro = live.astronomy;
-  const forecast = live.forecast;
-  const bans = live.fireBans;
 
   if (liveKey === 'fireBans') {
+    if (live.hasCampfireBan) return { text: 'Campfire ban in effect', color: C.warn };
+    const bans = live.fireBans;
     if (!bans) return null;
     return bans.length === 0
       ? { text: 'No active bans', color: C.sage }
-      : { text: `${bans.length} active ban${bans.length !== 1 ? 's' : ''}`, color: C.warn };
+      : { text: `${bans.length} ban${bans.length !== 1 ? 's' : ''} nearby`, color: C.warn };
   }
-  if (liveKey === 'forecast' && forecast) {
-    const today = forecast[0];
-    const tomorrow = forecast[1];
-    if (!today) return null;
-    const minT = today.mintempC;
-    const maxT = today.maxtempC;
-    const rain = today.hourly?.reduce((max, h) => Math.max(max, +h.chanceofrain || 0), 0);
-    const wind = today.hourly?.reduce((max, h) => Math.max(max, +h.windspeedKmph || 0), 0);
-    let parts = [`${minT}–${maxT}°C`];
-    if (rain != null) parts.push(`rain ${rain}%`);
-    if (wind != null) parts.push(`gusts ${wind} km/h`);
-    if (tomorrow) parts.push(`tmrw ${tomorrow.mintempC}–${tomorrow.maxtempC}°C`);
-    return { text: parts.join(' · '), color: C.bc };
+
+  if (liveKey === 'forecast') {
+    const f = live.forecast;
+    if (!f) return null;
+    const minT = f.minTemps?.[0];
+    const maxT = f.maxTemps?.[0];
+    const pop  = f.popMax?.[0];
+    const wind = f.windMax?.[0];
+    const parts = [];
+    if (minT != null && maxT != null) parts.push(`${Math.round(minT)}–${Math.round(maxT)}°C`);
+    if (pop  != null) parts.push(`rain ${pop}%`);
+    if (wind != null) parts.push(`gusts ${Math.round(wind)} km/h`);
+    if (f.minTemps?.[1] != null) parts.push(`tmrw ${Math.round(f.minTemps[1])}–${Math.round(f.maxTemps[1])}°C`);
+    return parts.length ? { text: parts.join(' · '), color: C.bc } : null;
   }
-  if (liveKey === 'rainRisk' && forecast) {
-    const maxRain = forecast[0]?.hourly?.reduce((max, h) => Math.max(max, +h.chanceofrain || 0), 0);
-    if (maxRain == null) return null;
-    if (maxRain >= 60) return { text: `⚠ ${maxRain}% rain — consider rescheduling`, color: C.warn };
-    if (maxRain >= 40) return { text: `${maxRain}% rain — tarp required`, color: C.gold };
-    return { text: `${maxRain}% rain — looking good`, color: C.sage };
+
+  if (liveKey === 'rainRisk') {
+    const pop = live.forecast?.popMax?.[0];
+    if (pop == null) return null;
+    if (pop >= 60) return { text: `⚠ ${pop}% rain — consider rescheduling`, color: C.warn };
+    if (pop >= 40) return { text: `${pop}% rain — tarp required`, color: C.gold };
+    return { text: `${pop}% rain — looking good`, color: C.sage };
   }
-  if (liveKey === 'sunrise' && astro) {
-    return { text: `Sunrise ${astro.sunrise} · Alarm ${astro.sunrise.replace(/(\d+):/, (_, h) => `${Math.max(1, +h - 1)}:`)}`, color: C.amber };
+
+  if (liveKey === 'sunrise') {
+    if (!live.sunrise) return null;
+    // suggest alarm 30 min before civil twilight
+    const [hh, mm] = live.sunrise.split(':').map(Number);
+    const alarmH = String(hh).padStart(2, '0');
+    const alarmM = String(Math.max(0, mm - 30)).padStart(2, '0');
+    return { text: `Civil twilight ${live.sunrise} · Alarm ~${alarmH}:${alarmM}`, color: C.amber };
   }
+
   return null;
 }
 
@@ -1060,6 +1233,9 @@ function RecipesView() {
 }
 
 //  Checklist View
+// Only these kinds surface in the checklist. 'do' = on-situ advice, stays in tree only.
+const CHECKLIST_KINDS = new Set(['check', 'get']);
+
 function deriveChecklist(hours) {
   const checks = [];
   const gets = [];
@@ -1069,8 +1245,8 @@ function deriveChecklist(hours) {
     const children = (node.children || []).filter(c => !c.minHours || hours >= c.minHours);
     const actionableKids = children.filter(c => c.type !== 'know' && c.type !== 'dep');
     if (actionableKids.length === 0) {
-      if (!node.kind) return;
-      const item = { label: node.label, note: node.note, type: node.type, dietary: node.dietary, section: rootMeta };
+      if (!CHECKLIST_KINDS.has(node.kind)) return;
+      const item = { label: node.label, note: node.note, type: node.type, dietary: node.dietary, liveKey: node.liveKey, section: rootMeta };
       if (node.kind === 'check') checks.push(item);
       else if (node.kind === 'get') gets.push(item);
     } else {
@@ -1086,10 +1262,42 @@ function deriveChecklist(hours) {
   return { checks, gets };
 }
 
+// Returns 'yes' | 'no' | null — null means no signal (data absent or ambiguous)
+function autoCheckLive(liveKey, live) {
+  if (!live || live.loading || !liveKey) return null;
+  if (liveKey === 'fireBans') {
+    if (live.fireBans == null && live.hasCampfireBan == null) return null;
+    return (live.hasCampfireBan || (live.fireBans?.length ?? 0) > 0) ? 'no' : 'yes';
+  }
+  if (liveKey === 'forecast') return live.forecast != null ? 'yes' : null;
+  if (liveKey === 'rainRisk') {
+    const pop = live.forecast?.popMax?.[0];
+    if (pop == null) return null;
+    if (pop < 40)  return 'yes';
+    if (pop >= 60) return 'no';
+    return null; // 40–59%: tarp zone, ambiguous
+  }
+  if (liveKey === 'sunrise') return live.sunrise != null ? 'yes' : null;
+  return null;
+}
+
+const CYCLE = { undefined: 'yes', yes: 'no', no: 'ignored', ignored: undefined };
+
 function ChecklistView() {
   const hours = useContext(DurationCtx);
-  const [checked, setChecked] = useState({});
-  const toggle = key => setChecked(c => ({ ...c, [key]: !c[key] }));
+  const live  = useContext(LiveDataCtx);
+  // explicit: { [key]: 'yes' | 'no' | 'ignored' | undefined }
+  const [explicit, setExplicit] = useState({});
+
+  function cycle(key) {
+    setExplicit(c => {
+      const next = CYCLE[c[key]];
+      const updated = { ...c };
+      if (next === undefined) delete updated[key];
+      else updated[key] = next;
+      return updated;
+    });
+  }
   const { checks, gets } = deriveChecklist(hours);
 
   function groupBySection(items) {
@@ -1104,38 +1312,63 @@ function ChecklistView() {
 
   const checkSections = groupBySection(checks);
   const getSections = groupBySection(gets);
-  const doneChecks = checks.filter(i => checked[`${i.section.id}:${i.label}`]).length;
-  const doneGets = gets.filter(i => checked[`${i.section.id}:${i.label}`]).length;
+  function resolveState(i) {
+    const key = `${i.section.id}:${i.label}`;
+    return explicit[key] !== undefined ? explicit[key] : (autoCheckLive(i.liveKey, live) ?? undefined);
+  }
+  const doneChecks = checks.filter(i => resolveState(i) === 'yes').length;
+  const doneGets   = gets.filter(i => resolveState(i) === 'yes').length;
   const doneTotal = doneChecks + doneGets;
   const totalItems = checks.length + gets.length;
 
   function renderItem(item) {
-    const key = `${item.section.id}:${item.label}`;
-    const done = !!checked[key];
+    const key      = `${item.section.id}:${item.label}`;
+    const auto     = autoCheckLive(item.liveKey, live);   // 'yes' | 'no' | null
+    const expVal   = explicit[key];                        // 'yes' | 'no' | 'ignored' | undefined
+    const state    = expVal !== undefined ? expVal : auto; // effective state
+    const isLive   = expVal === undefined && auto != null;
+
+    const BOX = {
+      yes:     { bg: isLive ? C.sage : C.amber, border: isLive ? C.sage : C.amber, glyph: '✓', glyphColor: C.bg },
+      no:      { bg: C.warn,  border: C.warn,  glyph: '✗', glyphColor: C.bg },
+      ignored: { bg: 'transparent', border: C.dim, glyph: '—', glyphColor: C.dim },
+      default: { bg: 'transparent', border: item.type === 'bc' ? C.bc : item.type === 'warn' ? C.warn : C.dim, glyph: null, glyphColor: null },
+    };
+    const box = BOX[state] ?? BOX.default;
     const typeColor = item.type === 'bc' ? C.bc : item.type === 'warn' ? C.warn : null;
+    const faded = state === 'yes' || state === 'ignored';
+
     return (
-      <div key={key} onClick={() => toggle(key)}
+      <div key={key} onClick={() => cycle(key)}
         style={{ display: 'flex', alignItems: 'flex-start', gap: 10,
           padding: '7px 12px', cursor: 'pointer',
           borderBottom: `1px solid ${C.border2}`, transition: 'background 0.1s',
-          opacity: done ? 0.45 : 1 }}
+          opacity: faded ? 0.45 : 1 }}
         onMouseEnter={e => e.currentTarget.style.background = C.s2}
         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
       >
         <div style={{ width: 15, height: 15, flexShrink: 0, marginTop: 2,
-          border: `1px solid ${done ? C.amber : (typeColor || C.dim)}`,
-          borderRadius: 3, background: done ? C.amber : 'transparent',
+          border: `1px solid ${box.border}`, borderRadius: 3, background: box.bg,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           transition: 'all 0.15s' }}>
-          {done && <span style={{ color: C.bg, fontSize: 10, fontWeight: 700 }}>✓</span>}
+          {box.glyph && <span style={{ color: box.glyphColor, fontSize: 10, fontWeight: 700, lineHeight: 1 }}>{box.glyph}</span>}
         </div>
         <div style={{ flex: 1 }}>
-          <span style={{ fontSize: 12, color: typeColor || C.text,
+          <span style={{ fontSize: 12, color: state === 'no' ? C.warn : (typeColor || C.text),
             fontFamily: "'JetBrains Mono',monospace",
-            textDecoration: done ? 'line-through' : 'none' }}>
+            textDecoration: state === 'yes' || state === 'ignored' ? 'line-through' : 'none' }}>
             {item.label}
           </span>
           {item.dietary?.map(d => <DietBadge key={d} d={d} />)}
+          {isLive && (
+            <span style={{ fontSize: 9, color: auto === 'no' ? C.warn : C.sage,
+              background: auto === 'no' ? `${C.warn}18` : `${C.sage}18`,
+              border: `1px solid ${auto === 'no' ? C.warn : C.sage}33`,
+              borderRadius: 3, padding: '0 5px', marginLeft: 6,
+              fontFamily: "'JetBrains Mono',monospace" }}>
+              LIVE
+            </span>
+          )}
           {item.note && (
             <div style={{ fontSize: 10, color: C.dim, marginTop: 1, fontStyle: 'italic' }}>
               {item.note}
@@ -1287,7 +1520,7 @@ export default function App() {
   const [tab, setTab]     = useState('tree');
   const [hours, setHours] = useState(14);
   const [site, setSite]   = useState(null);
-  const liveData   = useLiveData(site?.coords?.lat, site?.coords?.lng);
+  const liveData   = useLiveData(site?.coords?.lat, site?.coords?.lng, site?.bcparksSlug ?? null, site?.open511Road ?? null);
   const driveTimes = useDriveTimes();
 
   const TABS = [
@@ -1312,15 +1545,6 @@ export default function App() {
             letterSpacing: '0.02em', lineHeight: 1 }}>A Nice Camping Trip</div>
           <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
             Dependency Tree · April Edition · Metro Vancouver · Automobile Access
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
-            {DIETARY.map(d => (
-              <span key={d.tag} style={{ fontSize: 10, color: d.color,
-                border: `1px solid ${d.color}44`, borderRadius: 4, padding: '2px 8px',
-                background: `${d.color}0e`, fontFamily: "'JetBrains Mono',monospace" }}>
-                ⚠ {d.label}
-              </span>
-            ))}
           </div>
         </div>
 
