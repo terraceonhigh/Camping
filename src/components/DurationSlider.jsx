@@ -23,6 +23,9 @@ export function DurationSlider({ hours, setHours }) {
           fontStyle: dl.star ? 'normal' : 'italic' }}>{dl.label}</span>
       </div>
       <input type="range" min={1} max={36} value={hours} className="dur-slider"
+        aria-label={`Trip duration: ${hours} hours — ${dl.label}`}
+        aria-valuemin={1} aria-valuemax={36} aria-valuenow={hours}
+        aria-valuetext={`${hours} hours, ${dl.label}`}
         onChange={e => setHours(+e.target.value)} />
       <div style={{ position: 'relative', height: 28, marginTop: 4 }}>
         {THRESHOLDS.map(t => {

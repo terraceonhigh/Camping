@@ -31,7 +31,7 @@ export function SharedDepsView() {
               <td style={{ padding: '9px 16px' }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {row.needs.map(n => (
-                    <span key={n} style={{ fontSize: 11, background: C.s3, color: C.muted,
+                    <span key={n} style={{ fontSize: 11, background: C.s2, color: C.muted,
                       borderRadius: 3, padding: '2px 8px',
                       fontFamily: "'JetBrains Mono',monospace" }}>{n}</span>
                   ))}

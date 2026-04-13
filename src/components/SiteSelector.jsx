@@ -88,16 +88,20 @@ export function SiteSelector() {
 
         {/* FROM */}
         <div style={box}>
-          <div style={flabel}>From</div>
+          <div style={{ ...flabel, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>From</span>
+            <span style={{ fontSize: 9, color: C.dim, fontStyle: 'italic', textTransform: 'none', letterSpacing: 0 }}>editable ✎</span>
+          </div>
           <input
             type="text"
             value={dInput}
-            placeholder="Departure address…"
+            placeholder="Type any address…"
+            aria-label="Departure address"
             onChange={e => handleInput(e.target.value)}
             onFocus={handleFocus}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
-            style={inputBase}
+            style={{ ...inputBase, cursor: 'text' }}
           />
           {dep.label && dep.label !== dInput && (
             <div style={{ fontSize: 10, color: C.dim, fontFamily: MONO, marginTop: 3, fontStyle: 'italic' }}>
@@ -159,10 +163,11 @@ export function SiteSelector() {
           <div style={flabel}>To</div>
           <select
             value={site?.id || ''}
+            aria-label="Destination campsite"
             onChange={e => setSite(SITES.find(s => s.id === e.target.value) || null)}
             style={{
               background: C.bg, color: site ? C.text : C.muted,
-              border: 'none', outline: 'none', width: '100%', fontSize: 12,
+              border: 'none', width: '100%', fontSize: 12,
               fontFamily: MONO, cursor: 'pointer', padding: 0,
               appearance: 'none', WebkitAppearance: 'none',
             }}

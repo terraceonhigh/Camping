@@ -1,6 +1,6 @@
 export const C = {
   bg:     '#17140d', s1: '#201c13', s2: '#292418', s3: '#343020',
-  text:   '#f0e4c8', muted: '#9c8b6c', dim: '#5a5040', amber: '#df7618',
+  text:   '#f0e4c8', muted: '#9c8b6c', dim: '#9a896e', amber: '#df7618',
   gold:   '#c8a44a', sage: '#7aaa7c', warn: '#e8b840', bc: '#68a8ca',
   border: '#38301e', border2: '#272012',
 };
@@ -23,11 +23,53 @@ export function fmtTime(isoOrDate) {
 }
 
 export const TAG_META = {
-  gf:          { label: 'GF',    bg: '#c8a44a22', color: '#c8a44a' },
-  pescatarian: { label: 'fish',  bg: '#68a8ca22', color: '#68a8ca' },
-  vegetarian:  { label: 'veg',   bg: '#7aaa7c22', color: '#7aaa7c' },
-  vegan:       { label: 'vegan', bg: '#7aaa7c22', color: '#7aaa7c' },
+  gf:           { label: 'GF',     bg: '#c8a44a22', color: '#c8a44a' },
+  pescatarian:  { label: 'fish',   bg: '#68a8ca22', color: '#68a8ca' },
+  vegetarian:   { label: 'veg',    bg: '#7aaa7c22', color: '#7aaa7c' },
+  vegan:        { label: 'vegan',  bg: '#7aaa7c22', color: '#7aaa7c' },
+  'dairy-free': { label: 'DF',     bg: '#df761822', color: '#df7618' },
+  'nut-free':   { label: 'nuts✓',  bg: '#5a504022', color: '#9c8b6c' },
 };
+
+// All dietary restrictions the group configurator can toggle.
+// Keys align with recipe tags and tree.js dietary[] fields.
+export const ALL_DIETS = {
+  gf: {
+    label: 'Celiac / GF', short: 'GF', color: '#c8a44a',
+    detail: 'Gluten-free products required. Mild celiac (20 ppm threshold) — dedicated GF grahams and crackers; shared skewers OK at this threshold. Wheat beer off-limits; wine and spirits generally safe.',
+  },
+  pescatarian: {
+    label: 'Pescatarian', short: 'fish', color: '#68a8ca',
+    detail: 'No land meat. Fish and seafood OK. Use dedicated colour-coded skewers for fish/seafood to avoid cross-contamination.',
+  },
+  vegetarian: {
+    label: 'Vegetarian', short: 'veg', color: '#7aaa7c',
+    detail: 'No meat or fish. Dairy and eggs OK. Halloumi skewers and scrambled eggs are the primary protein options.',
+  },
+  vegan: {
+    label: 'Vegan', short: 'vegan', color: '#7aaa7c',
+    detail: 'No animal products. Most current camp recipes use butter, eggs, or dairy — vegan adaptation requires substitutions planned in advance.',
+  },
+  'dairy-free': {
+    label: 'Dairy-Free', short: 'DF', color: '#df7618',
+    detail: 'No milk, cheese, or butter. Current recipes rely heavily on butter and halloumi — plan oil substitutions and dairy-free cheese before the trip.',
+  },
+  'nut-free': {
+    label: 'Nut-Free', short: 'nuts✗', color: '#e8b840',
+    detail: 'No tree nuts or peanuts. All current recipes are nut-free. Check packaged snack labels — trail mix, granola bars, and some chocolate contain nuts.',
+  },
+  halal: {
+    label: 'Halal', short: 'halal', color: '#9c8b6c',
+    detail: 'Halal-certified meat required. Source sausages from a halal butcher before the trip. Shrimp is generally permissible. Alcohol in the group is a separate consideration.',
+  },
+  kosher: {
+    label: 'Kosher', short: 'kosher', color: '#9c8b6c',
+    detail: 'Kosher-certified ingredients required. Mixing meat and dairy (e.g. sausages + cheese quesadillas on the same fire) is not permissible — requires dedicated cookware and planning.',
+  },
+};
+
+// Derived list for backward compat (RecipesView Special Notes, ChecklistView DietBadge)
+export const DIETARY = Object.entries(ALL_DIETS).map(([tag, d]) => ({ tag, ...d }));
 
 export const DURATION_LABELS = [
   { max: 3,  label: 'Evening fire' },
@@ -54,13 +96,6 @@ export const THRESHOLDS = [
 export function getDurationLabel(h) {
   return DURATION_LABELS.find(d => h <= d.max) || DURATION_LABELS[DURATION_LABELS.length - 1];
 }
-
-export const DIETARY = [
-  { tag: 'celiac', color: C.gold, label: 'Celiac (mild, 20 ppm)',
-    detail: 'GF products recommended. Strict cross-contamination protocols not required. Shared skewers fine. Wheat beer off-limits.' },
-  { tag: 'pescatarian', color: C.bc, label: 'Pescatarian',
-    detail: 'No land meat. Dedicated fish/seafood skewers needed. Colour-code skewers.' },
-];
 
 // Only these kinds surface in the checklist. 'do' = on-situ advice, stays in tree only.
 export const CHECKLIST_KINDS = new Set(['check', 'get']);

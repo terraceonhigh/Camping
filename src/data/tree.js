@@ -18,7 +18,7 @@ export const TREE = [
       { label: 'Hard Constraints', children: [
         { label: 'Campfires allowed at site', note: 'Rocky Point, Barnet, Sasamat: no fire pits. Only BC Parks frontcountry sites.', liveKey: 'fireAllowed', kind: 'check' },
         { label: 'Within 1.5 h drive from departure', liveKey: 'driveTime', kind: 'check' },
-        { label: 'Park open for April', note: 'Some sites open May 1. Check bcparks.ca before booking.', url: 'https://bcparks.ca/find-a-park/', urlCtx: 'parkPage', liveKey: 'parkOpen', kind: 'check' },
+        { label: 'Park open for trip date', note: 'Some sites have seasonal closures (typically Nov–Apr). Check bcparks.ca before booking.', url: 'https://bcparks.ca/find-a-park/', urlCtx: 'parkPage', liveKey: 'parkOpen', kind: 'check' },
       ]},
       { label: 'Candidate Sites', type: 'know', children: [
         { label: 'Porteau Cove — 50 min · Hwy 99 · oceanfront', note: 'Year-round. Best cell. Pier for sunrise alpenglow on Howe Sound. Tidal beach.' },
@@ -58,7 +58,7 @@ export const TREE = [
       { label: 'Ice box pre-chilled', note: '1–2 hrs before loading food', kind: 'check' },
     ]},
     { label: 'Guests', children: [
-      { label: 'Dietary confirmed', note: 'celiac 20ppm + pescatarian', dietary: ['celiac','pescatarian'], kind: 'check' },
+      { label: 'Dietary confirmed', note: 'celiac 20ppm + pescatarian', dietary: ['gf','pescatarian'], kind: 'check' },
       { label: 'Firewood purchase delegated', note: 'Buy near site — BC 10km rule', type: 'bc', kind: 'check' },
       { label: 'Designated driver / overnight plan confirmed', type: 'warn', kind: 'check' },
     ]},
@@ -71,7 +71,7 @@ export const TREE = [
     desc: 'Root-level ritual — elevated above The Meal', children: [
     { label: 'Marshmallows', kind: 'get' },
     { label: 'Chocolate', note: 'Dark or milk', kind: 'get' },
-    { label: 'Graham crackers', note: 'Carry GF grahams separately; standard GF label (20ppm) safe for celiac guest', dietary: ['celiac'], kind: 'get' },
+    { label: 'Graham crackers', note: 'Carry GF grahams separately; standard GF label (20ppm) safe for celiac guest', dietary: ['gf'], kind: 'get' },
     { label: 'Roasting sticks', dep: 'The Meal → Cooking Gear' },
   ]},
   { id: 'fire', label: 'The Fire', emoji: '🔥', minHours: 0,
@@ -86,7 +86,7 @@ export const TREE = [
     { label: 'Fuel', children: [
       { label: 'Firewood', note: '2–3 bundles min (14-hr arc). Gas station bundles are fine — just buy near the site, not in Vancouver. Reserve 1 bundle for 4:30 AM rebuild.', kind: 'get' },
       { label: 'Kindling', note: 'Often missing from bundles — #1 reason fires fail. Buy fatwood near site.', type: 'warn', kind: 'get' },
-      { label: 'Tinder', note: 'Firestarter cubes, WetFire, or newspaper. Pack in sealed zip-lock — April humidity 70–85%.', kind: 'get' },
+      { label: 'Tinder', note: 'Firestarter cubes, WetFire, or newspaper. Pack in sealed zip-lock — wet-season humidity can hit 80–90%. Keep dry until the moment of use.', kind: 'get' },
     ]},
     { label: 'Ignition', children: [
       { label: 'Butane lighter (primary)', kind: 'get' },
@@ -94,13 +94,13 @@ export const TREE = [
       { label: 'Fire starter cubes or fatwood', note: 'Bridges tinder to kindling in damp', kind: 'get' },
     ]},
     { label: 'Fire Structure Knowledge', type: 'know', children: [
-      { label: 'Modified teepee for April damp', note: 'Tinder centre, kindling teepee, two logs A-frame. Elevate off ground on bark.' },
+      { label: 'Modified teepee for damp conditions', note: 'Tinder centre, kindling teepee, two logs A-frame. Elevate off ground on bark. More critical in spring/fall/winter.' },
       { label: 'Light from windward side' },
       { label: 'Allow kindling 5–7 min before large wood' },
       { label: 'Transition to log cabin / parallel log for sustained coals' },
     ]},
     { label: 'Wind Management', children: [
-      { label: 'April: 10–20 km/h; higher at Porteau Cove', kind: 'do' },
+      { label: 'Coastal sites: 10–25 km/h typical; check live wind in the bar above', kind: 'do' },
       { label: 'Body windbreak or tarp baffle during lighting', kind: 'do' },
       { label: 'Abandon attempt if sustained >30 km/h', type: 'warn', kind: 'do' },
     ]},
@@ -132,7 +132,7 @@ export const TREE = [
         { label: 'Halloumi', note: 'GF, vegetarian, grills directly on skewer', kind: 'get' },
         { label: 'Vegetables', note: 'Peppers, mushrooms, zucchini. GF + pescatarian-safe.', kind: 'get' },
       ]},
-      { label: 'Pre-made chili or stew', note: 'Made at home, reheated in pot over fire.', dietary: ['celiac'], kind: 'get' },
+      { label: 'Pre-made chili or stew', note: 'Made at home, reheated in pot over fire.', dietary: ['gf'], kind: 'get' },
       { label: 'Corn tortillas', note: 'GF. Universal base — wraps anything.', kind: 'get' },
     ]},
     { label: 'Sweets', children: [
@@ -147,17 +147,17 @@ export const TREE = [
     { label: 'Snacks', children: [
       { label: 'Early Evening (6–9 PM)', children: [
         { label: 'Cheese', kind: 'get' },
-        { label: 'GF crackers', dietary: ['celiac'], url: 'https://www.celiac.ca/living-with-celiac-disease/the-gluten-free-diet/', kind: 'get' },
+        { label: 'GF crackers', dietary: ['gf'], url: 'https://www.celiac.ca/living-with-celiac-disease/the-gluten-free-diet/', kind: 'get' },
         { label: 'Fruit (apples, oranges)', kind: 'get' },
-        { label: 'Hummus + cut vegetables', note: 'No cold chain required in April ambient temps', kind: 'get' },
+        { label: 'Hummus + cut vegetables', note: 'No cold chain required in cool weather (under ~15°C ambient)', kind: 'get' },
       ]},
       { label: 'Late Night (10 PM–2 AM)', minHours: 6, children: [
         { label: 'Hot chocolate packets', dep: 'The Meal → Drinks' },
         { label: 'Spiced nuts', kind: 'get' },
-        { label: 'Jerky', note: 'Check marinade labels for gluten', dietary: ['celiac'], url: 'https://www.celiac.ca/living-with-celiac-disease/the-gluten-free-diet/', kind: 'get' },
+        { label: 'Jerky', note: 'Check marinade labels for gluten', dietary: ['gf'], url: 'https://www.celiac.ca/living-with-celiac-disease/the-gluten-free-diet/', kind: 'get' },
       ]},
       { label: 'Pre-Dawn (4:30 AM)', minHours: 12, children: [
-        { label: 'Granola bars', note: 'Check labels', dietary: ['celiac'], kind: 'get' },
+        { label: 'Granola bars', note: 'Check labels', dietary: ['gf'], kind: 'get' },
         { label: 'Dates or dried fruit', kind: 'get' },
         { label: 'Trail mix', kind: 'get' },
       ]},
@@ -165,21 +165,21 @@ export const TREE = [
     { label: 'Drinks', children: [
       { label: 'Coffee (percolator or instant)', kind: 'get' },
       { label: 'Hot chocolate packets', kind: 'get' },
-      { label: 'Beer, wine, or spirits', note: 'Verify GF for celiac guest — wine/spirits generally safe, beer is not', dietary: ['celiac'], url: 'https://www.celiac.ca/living-with-celiac-disease/the-gluten-free-diet/gluten-free-alcohol/', kind: 'get' },
+      { label: 'Beer, wine, or spirits', note: 'Verify GF for celiac guest — wine/spirits generally safe, beer is not', dietary: ['gf'], url: 'https://www.celiac.ca/living-with-celiac-disease/the-gluten-free-diet/gluten-free-alcohol/', kind: 'get' },
       { label: 'Water', note: '2L per person minimum', kind: 'get' },
     ]},
     { label: 'Morning Fuel', minHours: 12, children: [
       { label: 'Coffee / thermos', kind: 'get' },
-      { label: 'Pastries or granola bars', dietary: ['celiac'], kind: 'get' },
+      { label: 'Pastries or granola bars', dietary: ['gf'], kind: 'get' },
     ]},
     { label: 'Cold Chain', type: 'dep', children: [
-      { label: 'Ice box / passive cooler', note: 'April ambient temps help. Preferred over 12V fridge.' },
+      { label: 'Ice box / passive cooler', note: 'Preferred over 12V fridge. In summer, pre-chill and use dry ice on top. In cool seasons, ambient temps do the work.' },
       { label: 'Ice + dry ice on top for longevity' },
       { label: 'Raw proteins in sealed containers', note: 'Bottom of cooler, coldest zone.', dietary: ['pescatarian'], url: 'https://www.bccdc.ca/health-info/food-your-health/food-poisoning' },
     ]},
     { label: 'Pantry & Condiments', children: [
       { label: 'Butter + garlic', note: 'Used in 4 dishes. 1 stick butter + 1 head garlic minimum.', kind: 'get' },
-      { label: 'Hot sauce + lime', note: 'Used in 4 dishes. Any GF hot sauce + 2–3 limes.', dietary: ['celiac'], kind: 'get' },
+      { label: 'Hot sauce + lime', note: 'Used in 4 dishes. Any GF hot sauce + 2–3 limes.', dietary: ['gf'], kind: 'get' },
       { label: 'Salt + pepper', note: 'Scrambled eggs + general seasoning. Small ziplock or camp shakers.', kind: 'get' },
     ]},
     { label: 'Cooking Gear', children: [
@@ -195,11 +195,11 @@ export const TREE = [
   { id: 'night', label: 'The Night', emoji: '🌙', minHours: 8,
     desc: 'The 12–3 AM window. Car / tent / fire devotee.', children: [
     { label: 'Sleeping Gear', children: [
-      { label: 'Sleeping bag rated 0–5°C per person', note: 'April overnight lows 5–7°C in Metro Vancouver', liveKey: 'overnightTemp', kind: 'get' },
+      { label: 'Sleeping bag rated for overnight low', note: 'Check forecast overnight low in the live bar. Use a bag rated below the minimum — spring/fall: 0–5°C, summer: 5–10°C, winter: −10°C.', liveKey: 'overnightTemp', kind: 'get' },
       { label: 'Sleeping pad (R-2.0 min, R-3.0+ recommended)', note: 'R-values are additive — stack a cheap foam pad (R-1.2) under an inflatable (R-2.5) = R-3.7', type: 'know' },
       { label: 'Real pillow', note: 'Compressible camping pillow or your home pillow in a stuff sack. Bunched-up jackets = "never again."', kind: 'get' },
       { label: 'Earplugs (foam)', note: 'Campground noise, tent rustling, wildlife. $2 and transformative for beginners.', kind: 'get' },
-      { label: 'Eye mask', note: 'April sunrise ~6:15 AM — tent fabric transmits all of it', kind: 'get' },
+      { label: 'Eye mask', note: 'Sunrise varies from 5:10 AM (late June) to 8:00 AM (late December) — tent fabric transmits all of it.', kind: 'get' },
     ]},
     { label: 'Shelter', children: [
       { label: 'Car Camping', note: 'Warmest, driest. 1–2 car spots available (carpool).', children: [
@@ -216,7 +216,7 @@ export const TREE = [
         { label: 'Practice setup at home before the trip', note: '10-min YouTube video for your specific model. Fumbling by headlamp at 10pm = #1 "never again" trigger.', type: 'know' },
         { label: 'Pitch on high, flat ground', note: 'Cold air pools in depressions. Under tree canopy if possible — canopy radiates heat, reduces dew.', type: 'know' },
         { label: 'Stake rain fly taut with all guylines', note: 'Saggy fly = fly touches inner wall = condensation wicks through.', type: 'know' },
-        { label: 'Orient door away from prevailing wind', note: 'Typically W/SW in Metro Vancouver April.', type: 'know' },
+        { label: 'Orient door away from prevailing wind', note: 'Typically W/SW in Metro Vancouver; check forecast for your trip date.', type: 'know' },
         { label: 'Open upper rain fly vents even if cold', note: 'Ventilation tradeoff is always worth it for condensation control.', type: 'know' },
         { label: 'Wet gear stays in the vestibule', note: 'Boots and rain shells — never inside the tent.', type: 'know' },
       ]},
@@ -241,7 +241,7 @@ export const TREE = [
       { label: 'Morning re-light from scratch', note: 'Keep dry kindling + newspaper in sealed bag overnight. Do not attempt overnight maintenance.', dep: 'The Fire → Ignition' },
     ]},
     { label: 'Wildlife Protocol', type: 'warn', children: [
-      { label: 'Black bears active in April', note: 'Males emerge March–April, hungry and food-motivated. Assume bears are active at any Metro Van campground.', type: 'warn', url: 'https://bcparks.ca/stay-safe/wildlife-safety/', kind: 'do' },
+      { label: 'Black bears active March–November', note: 'Assume bears are present at any Metro Van provincial campground year-round. Highest activity: spring emergence and fall hyperphagia.', type: 'warn', url: 'https://bcparks.ca/stay-safe/wildlife-safety/', kind: 'do' },
       { label: 'Raccoons — the more likely nuisance', note: 'Bold at established campgrounds. Will open cooler latches and unzip tent vestibules.', url: 'https://bcparks.ca/stay-safe/wildlife-safety/', kind: 'do' },
       { label: 'Food lockup: all food + scented items in locked vehicle', note: 'Includes toothpaste, sunscreen, deodorant. "Bare Campsite" rule: nothing out when sleeping.', type: 'bc', dep: 'The Meal → Cold Chain', kind: 'do' },
       { label: 'Do NOT hang food at frontcountry campgrounds', note: 'Counterintuitive but official BC Parks policy — hanging attracts wildlife to the campground.', type: 'bc', kind: 'do' },
@@ -274,7 +274,7 @@ export const TREE = [
   { id: 'sunrise', label: 'The Sunrise', emoji: '🌅', minHours: 14,
     desc: 'Aspirational — plan for 2–3 motivated early risers, not the whole group.', children: [
     { label: 'Timing', children: [
-      { label: 'Alarm: 60–75 min before sunrise', note: 'Late April sunrise ~5:50–6:10 AM. Early April ~6:30–6:50 AM. Adjust to actual trip date.', liveKey: 'sunrise', url: 'https://www.nrcan.gc.ca/maps-tools-and-publications/tools/sun-calculator/14057', kind: 'check' },
+      { label: 'Alarm: 60–75 min before sunrise', note: 'Ranges from 5:10 AM (late June) to 8:00 AM (late December). Check live bar above for actual civil twilight time.', liveKey: 'sunrise', url: 'https://www.nrcan.gc.ca/maps-tools-and-publications/tools/sun-calculator/14057', kind: 'check' },
       { label: 'Civil twilight starts 30–35 min before sunrise', note: 'Sky starts colouring then. Best colour is 10–15 min before sun crests.', type: 'know' },
       { label: 'Be in position during civil twilight', note: 'Not after sunrise — the best light happens before.', kind: 'do' },
     ]},
@@ -297,7 +297,7 @@ export const TREE = [
     ]},
     { label: 'Full layering on', dep: 'The Night → Layering', kind: 'do' },
     { label: 'Dawn Chorus', type: 'know', children: [
-      { label: 'Birds begin 30–60 min before sunrise', note: 'April Vancouver: robins and thrushes from ~4–5 AM, full chorus by 5:00–5:30 AM.' },
+      { label: 'Birds begin 30–60 min before sunrise', note: 'Metro Vancouver: robins and thrushes from roughly 30 min before civil twilight; full dawn chorus at sunrise. Loudest in late spring.' },
       { label: 'This IS the soundtrack', note: 'No music, no talking. Let it happen.' },
     ]},
     { label: 'Pre-dawn fire rebuild (optional)', note: 'Loud — crackling, blowing on coals. Only if the viewing spot is at the fire pit, not near tents.', dep: 'The Fire', kind: 'do' },
@@ -346,7 +346,7 @@ export const TREE = [
     { label: 'Stargazing', children: [
       { label: 'Stellarium Mobile (free app)', note: 'Point phone at sky, identifies constellations in real time.', url: 'https://stellarium-web.org/', kind: 'get' },
       { label: 'Moon phase — dark sky tonight?', liveKey: 'moonPhase', kind: 'check' },
-      { label: 'April sky: Leo overhead, Summer Triangle rising pre-dawn', note: 'Orion setting in west early evening. Vega, Deneb, Altair rising east by 4 AM.', type: 'know' },
+      { label: 'Use Stellarium to identify current constellations', note: 'Free app — point at sky to identify what\'s up tonight. No prior astronomy knowledge needed.', type: 'know' },
       { label: 'Invent your own constellations', note: 'Name them after people in the group. Low-effort, high-memory-making.', type: 'know' },
     ]},
     { label: 'Practical', children: [
@@ -360,11 +360,11 @@ export const TREE = [
   { id: 'morning', label: 'The Morning After', emoji: '☕', minHours: 15,
     desc: 'Post-sunrise. Break camp, hit a diner.', children: [
     { label: 'Breakfast Run', children: [
-      { label: "Fergie's Café, Squamish", note: 'Opens 9:00 AM. GF options. Sunwolf Resort, Brackendale. No reservations.', dietary: ['celiac'], kind: 'check' },
+      { label: "Fergie's Café, Squamish", note: 'Opens 9:00 AM. GF options. Sunwolf Resort, Brackendale. No reservations.', dietary: ['gf'], kind: 'check' },
       { label: 'Peaked Pies, Squamish', note: 'Opens 7:00 AM', kind: 'check' },
       { label: 'Freebird Table & Bar, Squamish', note: 'Opens 7:00 AM. Earliest Squamish option.', kind: 'check' },
       { label: 'Copper Beach Bar + Kitchen, Britannia Beach', note: 'Closest to Porteau Cove. Miners Breakfast.', kind: 'check' },
-      { label: 'Dutch Pannekoek Haus, Chilliwack', note: 'Opens 8:00 AM. 2+ hrs from all candidate sites — only if heading east after.', dietary: ['celiac'], type: 'warn', kind: 'check' },
+      { label: 'Dutch Pannekoek Haus, Chilliwack', note: 'Opens 8:00 AM. 2+ hrs from all candidate sites — only if heading east after.', dietary: ['gf'], type: 'warn', kind: 'check' },
     ]},
     { label: 'Camp Breakdown', children: [
       { label: 'Extinguish fire completely', note: 'Drown, stir, drown, feel with back of hand. If warm, repeat.', dep: 'The Fire → Safety', kind: 'do' },

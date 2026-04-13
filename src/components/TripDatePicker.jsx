@@ -43,6 +43,7 @@ export function TripDatePicker() {
       <input
         type="date"
         value={tripDate || ''}
+        aria-label="Trip date"
         onChange={e => setTripDate(e.target.value)}
         style={{
           background: C.bg,
@@ -52,7 +53,6 @@ export function TripDatePicker() {
           padding: '3px 7px',
           fontSize: 11,
           fontFamily: "'JetBrains Mono','Courier New',monospace",
-          outline: 'none',
           cursor: 'pointer',
         }}
       />

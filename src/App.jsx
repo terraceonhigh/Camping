@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { C } from "./constants.js";
-import { DurationCtx, LiveDataCtx, SiteCtx, TripDateCtx } from "./context.js";
+import { DurationCtx, LiveDataCtx, SiteCtx, TripDateCtx, DietaryCtx } from "./context.js";
 import { useLiveData } from "./hooks/useLiveData.js";
 import { useDriveTimes } from "./hooks/useDriveTimes.js";
 import { DEPARTURE } from "./data/sites.js";
@@ -9,6 +9,7 @@ import { LiveStatusBar } from "./components/LiveStatusBar.jsx";
 import { DurationSlider } from "./components/DurationSlider.jsx";
 import { TripDatePicker } from "./components/TripDatePicker.jsx";
 import { SiteSelector } from "./components/SiteSelector.jsx";
+import { DietaryToggles } from "./components/DietaryToggles.jsx";
 import { TreeView } from "./components/TreeView.jsx";
 import { RecipesView } from "./components/RecipesView.jsx";
 import { ChecklistView } from "./components/ChecklistView.jsx";
@@ -35,50 +36,69 @@ export default function App() {
   const [site, setSite]       = useState(null);
   const [tripDate, setTripDate] = useState(() => vancouverToday());
   const [departure, setDeparture] = useState(DEPARTURE);
+  // Diet states: Map<tag, 'partial' | 'full'>
+  // 'partial' = some members affected (show badges, don't dim)
+  // 'full'    = all members affected (dim incompatible recipes)
+  // not in map = off
+  const [activeDiets, setActiveDiets] = useState(new Map());
+  const toggleDiet = useCallback(tag => setActiveDiets(prev => {
+    const next = new Map(prev);
+    const cur = next.get(tag);
+    if (!cur) next.set(tag, 'partial');
+    else if (cur === 'partial') next.set(tag, 'full');
+    else next.delete(tag);
+    return next;
+  }), []);
   const liveData   = useLiveData(site?.coords?.lat, site?.coords?.lng, site?.bcparksSlug ?? null, site?.open511Road ?? null, tripDate);
   const driveTimes = useDriveTimes(departure);
+
+  const tripMonth = new Date(tripDate + 'T12:00:00').toLocaleString('en-CA', { month: 'long', timeZone: 'America/Vancouver' });
 
   return (
     <TripDateCtx.Provider value={{ tripDate, setTripDate }}>
     <SiteCtx.Provider value={{ site, setSite, driveTimes, departure, setDeparture }}>
     <DurationCtx.Provider value={hours}>
     <LiveDataCtx.Provider value={liveData}>
+    <DietaryCtx.Provider value={{ active: activeDiets, toggle: toggleDiet }}>
       <div style={{ background: C.bg, color: C.text, minHeight: '100vh',
         fontFamily: "'JetBrains Mono','Courier New',monospace" }}>
 
         {/* Header */}
-        <div style={{ background: C.s1, borderBottom: `1px solid ${C.border}`,
+        <header style={{ background: C.s1, borderBottom: `1px solid ${C.border}`,
           padding: '22px 28px 18px' }}>
-          <div style={{ fontFamily: "'Cormorant Garamond',Georgia,serif",
+          <h1 style={{ fontFamily: "'Cormorant Garamond',Georgia,serif",
             fontSize: 28, fontWeight: 700, color: C.amber,
-            letterSpacing: '0.02em', lineHeight: 1 }}>A Nice Camping Trip</div>
-          <div style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
-            Dependency Tree · April Edition · Metro Vancouver · Automobile Access
-          </div>
-        </div>
+            letterSpacing: '0.02em', lineHeight: 1, margin: 0 }}>A Nice Camping Trip</h1>
+          <p style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>
+            Dependency Tree · {tripMonth} · Metro Vancouver · Automobile Access
+          </p>
+        </header>
 
         <LiveStatusBar />
         <DurationSlider hours={hours} setHours={setHours} />
         <TripDatePicker />
         <SiteSelector />
+        <DietaryToggles />
 
         {/* Tab Bar */}
-        <div style={{ display: 'flex', background: C.s1,
+        <nav aria-label="Sections" style={{ display: 'flex', background: C.s1,
           borderBottom: `1px solid ${C.border}`, padding: '0 28px' }}>
           {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{
-              background: 'none', border: 'none', outline: 'none',
-              borderBottom: tab === t.id ? `2px solid ${C.amber}` : '2px solid transparent',
-              color: tab === t.id ? C.amber : C.muted,
-              fontFamily: "'JetBrains Mono',monospace", fontSize: 12,
-              padding: '11px 16px', cursor: 'pointer', marginBottom: -1,
-              transition: 'color 0.15s',
-            }}>{t.label}</button>
+            <button key={t.id} onClick={() => setTab(t.id)}
+              aria-current={tab === t.id ? 'page' : undefined}
+              style={{
+                background: 'none', border: 'none',
+                borderBottom: tab === t.id ? `2px solid ${C.amber}` : '2px solid transparent',
+                color: tab === t.id ? C.amber : C.muted,
+                fontFamily: "'JetBrains Mono',monospace", fontSize: 12,
+                padding: '11px 16px', cursor: 'pointer', marginBottom: -1,
+                transition: 'color 0.15s',
+              }}>{t.label}</button>
           ))}
-        </div>
+        </nav>
 
         {/* Content */}
-        <div style={{ padding: '20px 28px 40px', maxWidth: 880, margin: '0 auto' }}>
+        <main style={{ padding: '20px 28px 40px', maxWidth: 880, margin: '0 auto' }}>
           {tab === 'tree'      && <TreeView />}
           {tab === 'recipes'   && <RecipesView />}
           {tab === 'checklist' && <ChecklistView />}
@@ -96,8 +116,9 @@ export default function App() {
               github.com/terraceonhigh/Camping
             </a>
           </div>
-        </div>
+        </main>
       </div>
+    </DietaryCtx.Provider>
     </LiveDataCtx.Provider>
     </DurationCtx.Provider>
     </SiteCtx.Provider>
