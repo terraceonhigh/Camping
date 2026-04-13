@@ -84,7 +84,7 @@ export const TREE = [
       { label: 'Extinguishing requirement', note: 'Cold to touch — drown, stir, check with bare hand.', url: 'https://bcparks.ca/stay-safe/campfire-safety/', kind: 'do' },
     ]},
     { label: 'Fuel', children: [
-      { label: 'Firewood', note: '2–3 bundles min (14-hr arc). Hardwood preferred. Reserve 1 bundle for 4:30 AM rebuild.', kind: 'get' },
+      { label: 'Firewood', note: '2–3 bundles min (14-hr arc). Gas station bundles are fine — just buy near the site, not in Vancouver. Reserve 1 bundle for 4:30 AM rebuild.', kind: 'get' },
       { label: 'Kindling', note: 'Often missing from bundles — #1 reason fires fail. Buy fatwood near site.', type: 'warn', kind: 'get' },
       { label: 'Tinder', note: 'Firestarter cubes, WetFire, or newspaper. Pack in sealed zip-lock — April humidity 70–85%.', kind: 'get' },
     ]},
