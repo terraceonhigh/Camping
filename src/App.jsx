@@ -4,6 +4,7 @@ import { DurationCtx, LiveDataCtx, SiteCtx, TripDateCtx } from "./context.js";
 import { useLiveData } from "./hooks/useLiveData.js";
 import { useDriveTimes } from "./hooks/useDriveTimes.js";
 import { DEPARTURE } from "./data/sites.js";
+import { vancouverToday } from "./utils/localDate.js";
 import { LiveStatusBar } from "./components/LiveStatusBar.jsx";
 import { DurationSlider } from "./components/DurationSlider.jsx";
 import { TripDatePicker } from "./components/TripDatePicker.jsx";
@@ -32,7 +33,7 @@ export default function App() {
   const [tab, setTab]         = useState('tree');
   const [hours, setHours]     = useState(14);
   const [site, setSite]       = useState(null);
-  const [tripDate, setTripDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [tripDate, setTripDate] = useState(() => vancouverToday());
   const [departure, setDeparture] = useState(DEPARTURE);
   const liveData   = useLiveData(site?.coords?.lat, site?.coords?.lng, site?.bcparksSlug ?? null, site?.open511Road ?? null, tripDate);
   const driveTimes = useDriveTimes(departure);

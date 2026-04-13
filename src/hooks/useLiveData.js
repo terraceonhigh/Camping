@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { fmtTime } from "../constants.js";
+import { vancouverToday } from "../utils/localDate.js";
 
 function computeMoonPhase(date) {
   // Meeus algorithm — days since known new moon (Jan 6 2000 18:14 UTC)
@@ -51,8 +52,13 @@ export function useLiveData(lat, lng, bcparksSlug, open511Road, tripDate) {
     loading: true, error: null, lastUpdated: null,
   });
 
+  // Monotonically-increasing counter so stale responses can detect they've been
+  // superseded and bail out before writing to state.
+  const fetchGenRef = useRef(0);
+
   const fetchAll = useCallback(async () => {
-    const today = new Date().toISOString().split('T')[0];
+    const gen = ++fetchGenRef.current;
+    const today = vancouverToday();
     const date  = tripDate || today;
     const isToday = date === today;
 
@@ -162,6 +168,9 @@ export function useLiveData(lat, lng, bcparksSlug, open511Road, tripDate) {
 
     // ECCC alerts: features array
     const alertFeatures = alerts?.features ?? null;
+
+    // Bail out if a newer fetch has already started (site/date changed mid-flight)
+    if (gen !== fetchGenRef.current) return;
 
     setData({
       weather: cur ? {

@@ -65,6 +65,27 @@ export const DIETARY = [
 // Only these kinds surface in the checklist. 'do' = on-situ advice, stays in tree only.
 export const CHECKLIST_KINDS = new Set(['check', 'get']);
 
+/**
+ * Returns "HH:MM" alarm time 30 minutes before civil twilight.
+ * Borrows from the hour correctly — e.g. 06:10 → 05:40, not 06:00.
+ */
+export function sunriseAlarm(civilTwilightHHMM) {
+  const [hh, mm] = civilTwilightHHMM.split(':').map(Number);
+  let h = hh, m = mm - 30;
+  if (m < 0) { m += 60; h -= 1; }
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+/**
+ * Returns the relevant wind speed km/h for fire-safety decisions.
+ * Prefers live current weather; falls back to forecast wind max for future trips.
+ * Used by both LiveStatusBar (resolveLive) and ChecklistView (autoCheckLive)
+ * so the two surfaces always agree.
+ */
+export function resolveWindKmh(live) {
+  return live?.weather?.windKmh ?? live?.forecast?.windMax?.[0] ?? null;
+}
+
 // Context-derived deep links — falls back to node.url if no context available.
 // urlCtx: optional semantic hint on tree nodes for non-liveKey nodes that still benefit from site context.
 export function resolveUrl(node, site, live) {

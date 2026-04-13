@@ -1,6 +1,7 @@
 import { useContext } from "react";
-import { C, WMO_CODES } from "../constants.js";
+import { C, WMO_CODES, sunriseAlarm, resolveWindKmh } from "../constants.js";
 import { LiveDataCtx, SiteCtx, TripDateCtx } from "../context.js";
+import { vancouverToday } from "../utils/localDate.js";
 
 export function resolveLive(liveKey, live, site, driveTimes) {
   if (!live || live.loading || !liveKey) return null;
@@ -39,10 +40,7 @@ export function resolveLive(liveKey, live, site, driveTimes) {
 
   if (liveKey === 'sunrise') {
     if (!live.sunrise) return null;
-    const [hh, mm] = live.sunrise.split(':').map(Number);
-    const alarmH = String(hh).padStart(2, '0');
-    const alarmM = String(Math.max(0, mm - 30)).padStart(2, '0');
-    return { text: `Civil twilight ${live.sunrise} · Alarm ~${alarmH}:${alarmM}`, color: C.amber };
+    return { text: `Civil twilight ${live.sunrise} · Alarm ~${sunriseAlarm(live.sunrise)}`, color: C.amber };
   }
   if (liveKey === 'parkStatus') {
     if (live.parkStatus == null) return null;
@@ -91,11 +89,12 @@ export function resolveLive(liveKey, live, site, driveTimes) {
       : { text: `${live.activeFires} active fire${live.activeFires !== 1 ? 's' : ''} within 100 km`, color: C.warn };
   }
   if (liveKey === 'windFire') {
-    const wind = live.weather?.windKmh;
+    const wind = resolveWindKmh(live);
     if (wind == null) return null;
+    const label = live.weather?.windKmh != null ? `Wind ${wind} km/h` : `Forecast wind ${wind} km/h`;
     return wind < 30
-      ? { text: `Wind ${wind} km/h — OK to light`, color: C.sage }
-      : { text: `⚠ Wind ${wind} km/h — fire risky`, color: C.warn };
+      ? { text: `${label} — OK to light`, color: C.sage }
+      : { text: `⚠ ${label} — fire risky`, color: C.warn };
   }
   if (liveKey === 'overnightTemp') {
     const minT = live.forecast?.minTemps?.[0];
@@ -145,7 +144,7 @@ export function LiveStatusBar() {
   const live = useContext(LiveDataCtx);
   const { site } = useContext(SiteCtx) || {};
   const tripDateCtx = useContext(TripDateCtx);
-  const today = new Date().toISOString().split('T')[0];
+  const today = vancouverToday();
   const isFuture = live?.tripDate && live.tripDate !== today;
 
   if (!live || live.loading) return (

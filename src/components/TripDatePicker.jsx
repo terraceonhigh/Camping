@@ -1,10 +1,11 @@
 import { useContext } from "react";
 import { C } from "../constants.js";
 import { TripDateCtx } from "../context.js";
+import { vancouverToday } from "../utils/localDate.js";
 
 export function TripDatePicker() {
   const { tripDate, setTripDate } = useContext(TripDateCtx);
-  const today = new Date().toISOString().split('T')[0];
+  const today = vancouverToday();
 
   let daysAway = null;
   let daysLabel = '';

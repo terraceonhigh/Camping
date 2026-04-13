@@ -1,5 +1,5 @@
 import { useState, useContext } from "react";
-import { C, CHECKLIST_KINDS, resolveUrl } from "../constants.js";
+import { C, CHECKLIST_KINDS, resolveUrl, resolveWindKmh } from "../constants.js";
 import { DurationCtx, LiveDataCtx, SiteCtx } from "../context.js";
 import { TREE } from "../data/tree.js";
 import { DietBadge } from "./Helpers.jsx";
@@ -81,7 +81,7 @@ export function autoCheckLive(liveKey, live, site, driveTimes) {
     return live.activeFires === 0 ? 'yes' : 'no';
   }
   if (liveKey === 'windFire') {
-    const wind = live.weather?.windKmh ?? live.forecast?.windMax?.[0];
+    const wind = resolveWindKmh(live);
     if (wind == null) return null;
     return wind < 30 ? 'yes' : 'no';
   }
