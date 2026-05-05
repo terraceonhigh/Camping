@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "5200"],
+      "port": 5200
+    },
+    {
+      "name": "test",
+      "runtimeExecutable": "./node_modules/.bin/vitest",
+      "runtimeArgs": ["--ui", "--port", "5201"],
+      "port": 5201
+    }
+  ]
+}
